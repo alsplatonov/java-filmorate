@@ -1,48 +1,44 @@
 package ru.yandex.practicum.filmorate.controller;
 
 import jakarta.validation.Valid;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.web.bind.annotation.*;
 import ru.yandex.practicum.filmorate.exception.ValidationException;
 import ru.yandex.practicum.filmorate.model.Film;
-
+import ru.yandex.practicum.filmorate.storage.film.FilmStorage;
 import java.time.LocalDate;
 import java.util.Collection;
-import java.util.HashMap;
-import java.util.Map;
 
 @Slf4j
 @RestController
 @RequestMapping("/films")
+@RequiredArgsConstructor
 public class FilmController {
 
     private static final LocalDate MIN_RELEASE_DATE = LocalDate.of(1895, 12, 28);
-    private final Map<Long, Film> films = new HashMap<>();
-    private Long idCounter = 1L;
+
+    private final FilmStorage filmStorage;
 
     @PostMapping
     public Film create(@Valid @RequestBody Film film) {
         validateReleaseDate(film);
-        film.setId(idCounter++);
-        films.put(film.getId(), film);
-        log.info("Добавлен фильм: {}", film);
-        return film;
+        Film newFilm = filmStorage.create(film);
+        log.info("Добавлен фильм: {}", newFilm);
+        return newFilm;
     }
 
     @PutMapping
     public Film update(@Valid @RequestBody Film film) {
         validateReleaseDate(film);
-        if (!films.containsKey(film.getId())) {
-            throw new ValidationException("Фильм с id=" + film.getId() + " не найден");
-        }
-        films.put(film.getId(), film);
-        log.info("Обновлён фильм: {}", film);
-        return film;
+        Film updFilm = filmStorage.update(film);
+        log.info("Обновлён фильм: {}", updFilm);
+        return updFilm;
     }
 
     @GetMapping
     public Collection<Film> findAll() {
-        return films.values();
+        return filmStorage.findAll();
     }
 
     private void validateReleaseDate(Film film) {
