@@ -4,7 +4,9 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import ru.yandex.practicum.filmorate.exception.ValidationException;
 import ru.yandex.practicum.filmorate.model.Film;
+import ru.yandex.practicum.filmorate.model.User;
 import ru.yandex.practicum.filmorate.storage.film.FilmStorage;
+import ru.yandex.practicum.filmorate.storage.user.UserStorage;
 
 import java.time.LocalDate;
 import java.util.Collection;
@@ -15,6 +17,7 @@ public class FilmService {
     private final FilmStorage filmStorage;
 
     private static final LocalDate MIN_RELEASE_DATE = LocalDate.of(1895, 12, 28);
+    private final UserStorage userStorage;
 
     public Film create(Film film) {
         validateReleaseDate(film);
@@ -22,6 +25,7 @@ public class FilmService {
     }
 
     public Film update(Film film) {
+        Film existingFilm = filmStorage.findById(film.getId());
         validateReleaseDate(film);
         return filmStorage.update(film);
     }
@@ -36,11 +40,13 @@ public class FilmService {
 
     public void setLike(Long filmId, Long userId) {
         Film film = filmStorage.findById(filmId);
+        User user = userStorage.findById(userId);
         film.getUserLikes().add(userId);
     }
 
     public void removeLike(Long filmId, Long userId) {
         Film film = filmStorage.findById(filmId);
+        User user = userStorage.findById(userId);
         film.getUserLikes().remove(userId);
     }
 

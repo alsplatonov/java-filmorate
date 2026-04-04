@@ -2,6 +2,7 @@ package ru.yandex.practicum.filmorate.service;
 
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
+import ru.yandex.practicum.filmorate.exception.NotFoundException;
 import ru.yandex.practicum.filmorate.exception.ValidationException;
 import ru.yandex.practicum.filmorate.model.User;
 import ru.yandex.practicum.filmorate.storage.user.UserStorage;
@@ -22,6 +23,9 @@ public class UserService {
     }
 
     public User update(User user) {
+        // пробуем найти пользователя, если нет — выбросится NotFoundException
+        User existingUser = userStorage.findById(user.getId());
+        // нормализуем имя и обновляем
         normalizeUserName(user);
         return userStorage.update(user);
     }
@@ -35,15 +39,15 @@ public class UserService {
     }
 
     public void addFriend(Long userId, Long friendId) {
-        User user = findById(userId);
-        User friend = findById(friendId);
+        User user = userStorage.findById(userId);
+        User friend = userStorage.findById(friendId);
         user.getFriends().add(friendId);
         friend.getFriends().add(userId);
     }
 
     public void removeFriend(Long userId, Long friendId) {
-        User user = findById(userId);
-        User friend = findById(friendId);
+        User user = userStorage.findById(userId);
+        User friend = userStorage.findById(friendId);
         user.getFriends().remove(friendId);
         friend.getFriends().remove(userId);
     }
@@ -56,8 +60,8 @@ public class UserService {
     }
     //список общих друзей двух юзеров
     public Set<User> getCommonFriends(Long firstUserId, Long secondUserId) {
-        User user1 = findById(firstUserId);
-        User user2 = findById(secondUserId);
+        User user1 = userStorage.findById(firstUserId);
+        User user2 = userStorage.findById(secondUserId);
         Set<Long> commonFriendsIds = new HashSet<>(user1.getFriends());
         commonFriendsIds.retainAll(user2.getFriends());
         return commonFriendsIds.stream()
