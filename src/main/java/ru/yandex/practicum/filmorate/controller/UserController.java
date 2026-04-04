@@ -6,6 +6,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.web.bind.annotation.*;
 import ru.yandex.practicum.filmorate.exception.ValidationException;
 import ru.yandex.practicum.filmorate.model.User;
+import ru.yandex.practicum.filmorate.service.UserService;
 import ru.yandex.practicum.filmorate.storage.film.FilmStorage;
 import ru.yandex.practicum.filmorate.storage.user.UserStorage;
 
@@ -19,27 +20,25 @@ import java.util.Map;
 @RequiredArgsConstructor
 public class UserController {
 
-    public final UserStorage userStorage;
+    private final UserService userService;
 
     @PostMapping
     public User create(@Valid @RequestBody User user) {
-        normalizeUserName(user);
-        User newUser = userStorage.create(user);
+        User newUser = userService.create(user);
         log.info("Создан пользователь: {}", newUser);
         return newUser;
     }
 
     @PutMapping
     public User update(@Valid @RequestBody User user) {
-        normalizeUserName(user);
-        User updatedUser = userStorage.update(user);
+        User updatedUser = userService.update(user);
         log.info("Обновлён пользователь: {}", updatedUser);
         return updatedUser;
     }
 
     @GetMapping
     public Collection<User> findAll() {
-        return userStorage.findAll();
+        return userService.findAll();
     }
 
     private void normalizeUserName(User user) {
