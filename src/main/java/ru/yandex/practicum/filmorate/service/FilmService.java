@@ -44,15 +44,18 @@ public class FilmService {
         film.getUserLikes().remove(userId);
     }
 
-    public Collection<Film> getPopularFilms() {
+    public Collection<Film> getPopularFilms(int count) {
+        if (count <= 0) {
+            throw new ValidationException("count должен быть больше 0");
+        }
         return filmStorage.findAll().stream()
                 // сортируем по количеству лайков (по убыванию)
                 .sorted((f1, f2) -> Integer.compare(
                         f2.getUserLikes().size(),
                         f1.getUserLikes().size()
                 ))
-                // берем только 10
-                .limit(10)
+                // берем в кол-ве count
+                .limit(count)
                 .toList();
     }
 

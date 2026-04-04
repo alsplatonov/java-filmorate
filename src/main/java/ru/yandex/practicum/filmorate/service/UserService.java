@@ -48,7 +48,7 @@ public class UserService {
         friend.getFriends().remove(userId);
     }
     //список объектов друзей, а не id
-    public Set<User> getFriends(Long userId) {
+    public Set<User> getUserFriends(Long userId) {
         User user = findById(userId);
         return user.getFriends().stream()
                 .map(id -> findById(id))
