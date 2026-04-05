@@ -38,14 +38,12 @@ class FilmControllerTest {
     }
 
     private User createUser() throws Exception {
-        String json = """
-            {
-              "email": "test@test.com",
-              "login": "user",
-              "name": "User",
-              "birthday": "1990-01-01"
-            }
-            """;
+        String json = "{\n" +
+                "  \"email\": \"test@test.com\",\n" +
+                "  \"login\": \"user\",\n" +
+                "  \"name\": \"User\",\n" +
+                "  \"birthday\": \"1990-01-01\"\n" +
+                "}";
 
         String response = mockMvc.perform(post("/users")
                         .contentType(MediaType.APPLICATION_JSON)
