@@ -1,14 +1,13 @@
 package ru.yandex.practicum.filmorate.controller;
 
-
 import org.springframework.http.HttpStatus;
+import org.springframework.http.converter.HttpMessageNotReadableException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 import ru.yandex.practicum.filmorate.exception.NotFoundException;
 import ru.yandex.practicum.filmorate.exception.ValidationException;
-
 import java.util.stream.Collectors;
 
 @RestControllerAdvice
@@ -29,6 +28,13 @@ public class ErrorHandler {
                 .map(err -> err.getField() + ": " + err.getDefaultMessage())
                 .collect(Collectors.joining("; "));
         return new ErrorResponse(errors);
+    }
+
+    //400 пустой json
+    @ExceptionHandler
+    @ResponseStatus(HttpStatus.BAD_REQUEST)
+    public ErrorResponse handleEmptyBody(HttpMessageNotReadableException e) {
+        return new ErrorResponse("Тело запроса не может быть пустым");
     }
 
     // 404

@@ -8,7 +8,6 @@ import org.springframework.web.bind.annotation.*;
 import ru.yandex.practicum.filmorate.model.Film;
 import ru.yandex.practicum.filmorate.service.FilmService;
 import java.util.Collection;
-import java.util.Optional;
 
 @Slf4j
 @RestController
@@ -44,6 +43,7 @@ public class FilmController {
     }
 
     @PutMapping("/{id}/like/{userId}")
+    @ResponseStatus(HttpStatus.NO_CONTENT)
     public void setLike(@PathVariable Long id, @PathVariable Long userId) {
         filmService.setLike(id, userId);
     }
