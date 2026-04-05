@@ -28,6 +28,8 @@ public class InMemoryUserStorage implements UserStorage {
         users.put(user.getId(), user);
         return user;
     }
+
+    @Override
     public Collection<User> findAll() {
         return users.values();
     }
