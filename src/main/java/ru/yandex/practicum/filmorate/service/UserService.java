@@ -48,6 +48,7 @@ public class UserService {
         user.getFriends().remove(friendId);
         friend.getFriends().remove(userId);
     }
+
     //список объектов друзей, а не id
     public Set<User> getUserFriends(Long userId) {
         User user = findById(userId);
@@ -55,6 +56,7 @@ public class UserService {
                 .map(id -> findById(id))
                 .collect(Collectors.toSet());
     }
+
     //список общих друзей двух юзеров
     public Set<User> getCommonFriends(Long firstUserId, Long secondUserId) {
         User user1 = userStorage.findById(firstUserId);
