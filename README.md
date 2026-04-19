@@ -78,8 +78,8 @@ JOIN film_genres fg ON f.id = fg.film_id
 SELECT f1.friend_id
     FROM friendships f1
 JOIN friendships f2 ON f1.friend_id = f2.friend_id
-    WHERE f1.user_id = ?
-    AND f2.user_id = ?
+    WHERE f1.user_id = 1
+    AND f2.user_id = 3
     AND f1.status = 'CONFIRMED'
     AND f2.status = 'CONFIRMED';
 ```
