@@ -8,7 +8,7 @@ import ru.yandex.practicum.filmorate.model.User;
 import java.util.List;
 import java.util.Optional;
 
-@Repository("dbUserStorage")
+@Repository
 public class UserDbStorage extends BaseRepository<User> implements UserStorage {
     private static final String FIND_ALL_QUERY = "SELECT * FROM users";
     private static final String FIND_BY_EMAIL_QUERY = "SELECT * FROM users WHERE email = ?";
