@@ -2,13 +2,10 @@ package ru.yandex.practicum.filmorate.service;
 
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
-import ru.yandex.practicum.filmorate.dao.FilmDbStorage;
 import ru.yandex.practicum.filmorate.dao.MpaRatingDbStorage;
 import ru.yandex.practicum.filmorate.dto.MpaRatingDto;
 import ru.yandex.practicum.filmorate.exception.NotFoundException;
 import ru.yandex.practicum.filmorate.mapper.MpaRatingMapper;
-import ru.yandex.practicum.filmorate.model.MpaRating;
-
 import java.util.Collection;
 import java.util.stream.Collectors;
 
