@@ -3,9 +3,6 @@ package ru.yandex.practicum.filmorate.dto;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Positive;
 import lombok.Data;
-import ru.yandex.practicum.filmorate.model.Genre;
-import ru.yandex.practicum.filmorate.model.MpaRating;
-
 import java.time.LocalDate;
 import java.util.Set;
 
