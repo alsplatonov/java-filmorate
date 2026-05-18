@@ -33,3 +33,12 @@ SELECT 'Документальный' WHERE NOT EXISTS (SELECT 1 FROM genres WHE
 INSERT INTO genres (name)
 SELECT 'Боевик' WHERE NOT EXISTS (SELECT 1 FROM genres WHERE name='Боевик');
 
+--USERS
+INSERT INTO users(login, name, email, birthday) values
+('xS5pYhwSCY','Alexis Bergstrom','Enola_McCullough13@gmail.com','1973-04-14');
+
+--FILMS
+INSERT INTO films(name, description, release_date, duration, mpa_id) values
+('Mprpkn6rKSgRARY','EUnHlaEF3PtL3aDRtQ4MA2ufhJGeNoeKoEcHIh18CdAW0IkemJ','1962-08-09',
+ '138','2');
+
