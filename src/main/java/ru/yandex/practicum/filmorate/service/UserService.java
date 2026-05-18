@@ -47,14 +47,12 @@ public class UserService {
     }
 
     public void addFriend(Long userId, Long friendId) {
-
         userDbStorage.findById(userId)
                 .orElseThrow(() -> new NotFoundException("Пользователь не найден"));
 
         userDbStorage.findById(friendId)
                 .orElseThrow(() -> new NotFoundException("Друг не найден"));
 
-        // если вообще нет связи
         friendsDbStorage.addFriend(userId, friendId);
     }
 
