@@ -65,12 +65,15 @@ public class FilmDbStorage extends BaseRepository<Film> implements FilmStorage {
         if (genres == null || genres.isEmpty()) {
             return;
         }
-        for (Genre genre : genres) {
-            update(
-                    INSERT_FILM_GENRE,
-                    filmId,
-                    genre.getId()
-            );
-        }
+
+        jdbc.batchUpdate(
+                INSERT_FILM_GENRE,
+                genres,
+                genres.size(),
+                (ps, genre) -> {
+                    ps.setLong(1, filmId);
+                    ps.setLong(2, genre.getId());
+                }
+        );
     }
 }

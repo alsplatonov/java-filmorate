@@ -4,6 +4,12 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Repository;
 
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
+
 @Repository
 @RequiredArgsConstructor
 public class LikesDbStorage implements LikesStorage {
@@ -21,6 +27,11 @@ public class LikesDbStorage implements LikesStorage {
 
     private static final String CHECK_LIKE_EXISTS =
             "SELECT COUNT(*) FROM likes WHERE film_id = ? AND user_id = ?";
+
+    private static final String GET_LIKES_COUNT_FOR_FILMS =
+            "SELECT film_id, COUNT(user_id) as cnt FROM likes " +
+                    "WHERE film_id IN (%s) " +
+                    "GROUP BY film_id";
 
     @Override
     public void addLike(long filmId, long userId) {
@@ -41,5 +52,25 @@ public class LikesDbStorage implements LikesStorage {
     public boolean isLiked(long filmId, long userId) {
         Integer count = jdbc.queryForObject(CHECK_LIKE_EXISTS, Integer.class, filmId, userId);
         return count != null && count > 0;
+    }
+
+    public Map<Long, Integer> getLikesCountForFilms(List<Long> filmIds) {
+        if (filmIds == null || filmIds.isEmpty()) {
+            return Collections.emptyMap();
+        }
+
+        String placeholders = filmIds.stream()
+                .map(id -> "?")
+                .collect(Collectors.joining(","));
+
+        String finalQuery = String.format(GET_LIKES_COUNT_FOR_FILMS, placeholders);
+
+        return jdbc.query(finalQuery, rs -> {
+            Map<Long, Integer> map = new HashMap<>();
+            while (rs.next()) {
+                map.put(rs.getLong("film_id"), rs.getInt("cnt"));
+            }
+            return map;
+        }, filmIds.toArray());
     }
 }

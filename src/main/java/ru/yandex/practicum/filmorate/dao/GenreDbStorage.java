@@ -4,15 +4,15 @@ import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.core.RowMapper;
 import org.springframework.stereotype.Repository;
 import ru.yandex.practicum.filmorate.model.Genre;
-import java.util.LinkedHashSet;
-import java.util.List;
-import java.util.Optional;
-import java.util.Set;
+
+import java.util.*;
+import java.util.stream.Collectors;
 
 @Repository
 public class GenreDbStorage extends BaseRepository<Genre> implements GenreStorage {
     private static final String FIND_ALL_GENRES = "SELECT * FROM genres ORDER BY id ASC";
     private static final String FIND_BY_GENRE_ID = "SELECT * FROM genres WHERE id = ?";
+    private static final String FIND_GENRES_BY_IDS = "SELECT * FROM genres WHERE id IN (%s)";
     private static final String FIND_GENRE_BY_FILM_ID =
             "SELECT g.id, g.name " +
                     "FROM film_genres fg " +
@@ -38,5 +38,19 @@ public class GenreDbStorage extends BaseRepository<Genre> implements GenreStorag
         return new LinkedHashSet<>(
                 findMany(FIND_GENRE_BY_FILM_ID, filmId)
         );
+    }
+
+    public List<Genre> findGenresByIds(Set<Long> ids) {
+        if (ids == null || ids.isEmpty()) {
+            return Collections.emptyList();
+        }
+
+        String placeholders = ids.stream()
+                .map(id -> "?")
+                .collect(Collectors.joining(","));
+
+        String finalQuery = String.format(FIND_GENRES_BY_IDS, placeholders);
+
+        return findMany(finalQuery, ids.toArray());
     }
 }

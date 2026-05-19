@@ -14,8 +14,7 @@ import ru.yandex.practicum.filmorate.model.Film;
 import ru.yandex.practicum.filmorate.model.Genre;
 import ru.yandex.practicum.filmorate.model.MpaRating;
 import java.time.LocalDate;
-import java.util.Collection;
-import java.util.Set;
+import java.util.*;
 import java.util.stream.Collectors;
 
 @Service
@@ -31,17 +30,32 @@ public class FilmService {
     public FilmDto create(NewFilmRequest request) {
         Film film = FilmMapper.mapToFilm(request);
         validateReleaseDate(film);
+        //mpa
         if (request.getMpa() != null) {
             MpaRating mpa = mpaRatingDbStorage.findById(request.getMpa().getId())
                     .orElseThrow(() -> new NotFoundException("MPA не найден"));
             film.setMpa(mpa);
         }
-
+        //genres
         if (request.getGenres() != null && !request.getGenres().isEmpty()) {
-            Set<Genre> genres = request.getGenres().stream()
-                    .map(g -> genreDbStorage.findById(g.getId())
-                            .orElseThrow(() -> new NotFoundException("Жанр не найден. ID: " + g.getId())))
+            //получаем список id жанров
+            Set<Long> genreIds = request.getGenres().stream()
+                    .map(GenreDto::getId)
                     .collect(Collectors.toSet());
+
+            Set<Genre> genres = new HashSet<>(genreDbStorage.findGenresByIds(genreIds));
+
+            Set<Long> foundIds = genres.stream()
+                    .map(Genre::getId)
+                    .collect(Collectors.toSet());
+
+            // ищем проблемные id
+            Set<Long> missingIds = new HashSet<>(genreIds);
+            missingIds.removeAll(foundIds); //получили список отсутствующий в БД id жанров
+
+            if (!missingIds.isEmpty()) {
+                throw new NotFoundException("Жанры не найдены: " + missingIds);
+            }
 
             film.setGenres(genres);
         }
@@ -89,12 +103,19 @@ public class FilmService {
             throw new ValidationException("count должен быть больше 0");
         }
 
-        return filmDbStorage.findAll().stream()
+        List<Film> films = filmDbStorage.findAll();
+
+        Map<Long, Integer> likesMap = likesDbStorage.getLikesCountForFilms(
+                films.stream()
+                        .map(Film::getId)
+                        .collect(Collectors.toList())
+        );
+
+        return films.stream()
                 .map(this::getFilmExtensions)
-                // сортировка по лайкам
                 .sorted((f1, f2) -> Integer.compare(
-                        likesDbStorage.getLikesCount(f2.getId()),
-                        likesDbStorage.getLikesCount(f1.getId())
+                        likesMap.getOrDefault(f2.getId(), 0),
+                        likesMap.getOrDefault(f1.getId(), 0)
                 ))
                 .limit(count)
                 .map(FilmMapper::mapToFilmDto)
