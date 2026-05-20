@@ -1,5 +1,6 @@
 package ru.yandex.practicum.filmorate.controller;
 
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.converter.HttpMessageNotReadableException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
@@ -10,6 +11,7 @@ import ru.yandex.practicum.filmorate.exception.NotFoundException;
 import ru.yandex.practicum.filmorate.exception.ValidationException;
 import java.util.stream.Collectors;
 
+@Slf4j
 @RestControllerAdvice
 public class ErrorHandler {
 
@@ -17,6 +19,7 @@ public class ErrorHandler {
     @ExceptionHandler
     @ResponseStatus(HttpStatus.BAD_REQUEST)
     public ErrorResponse handleParameter(ValidationException e) {
+        log.warn("ValidationException: {}", e.getMessage());
         return new ErrorResponse(e.getMessage());
     }
 
@@ -27,6 +30,7 @@ public class ErrorHandler {
         String errors = e.getBindingResult().getFieldErrors().stream()
                 .map(err -> err.getField() + ": " + err.getDefaultMessage())
                 .collect(Collectors.joining("; "));
+        log.warn("MethodArgumentNotValidException: {}", errors);
         return new ErrorResponse(errors);
     }
 
@@ -34,6 +38,7 @@ public class ErrorHandler {
     @ExceptionHandler
     @ResponseStatus(HttpStatus.BAD_REQUEST)
     public ErrorResponse handleEmptyBody(HttpMessageNotReadableException e) {
+        log.warn("Empty request body");
         return new ErrorResponse("Тело запроса не может быть пустым");
     }
 
@@ -41,6 +46,7 @@ public class ErrorHandler {
     @ExceptionHandler
     @ResponseStatus(HttpStatus.NOT_FOUND)
     public ErrorResponse handleNotFound(NotFoundException e) {
+        log.warn("NotFoundException: {}", e.getMessage());
         return new ErrorResponse(e.getMessage());
     }
 
@@ -48,6 +54,7 @@ public class ErrorHandler {
     @ExceptionHandler
     @ResponseStatus(HttpStatus.INTERNAL_SERVER_ERROR)
     public ErrorResponse handleOther(Throwable e) {
+        log.error("Unexpected error", e);
         return new ErrorResponse("Произошла непредвиденная ошибка.");
     }
 }

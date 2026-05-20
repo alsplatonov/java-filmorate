@@ -2,66 +2,124 @@ package ru.yandex.practicum.filmorate.service;
 
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
+import ru.yandex.practicum.filmorate.dao.FilmDbStorage;
+import ru.yandex.practicum.filmorate.dao.GenreDbStorage;
+import ru.yandex.practicum.filmorate.dao.LikesDbStorage;
+import ru.yandex.practicum.filmorate.dao.MpaRatingDbStorage;
+import ru.yandex.practicum.filmorate.dto.*;
+import ru.yandex.practicum.filmorate.exception.NotFoundException;
 import ru.yandex.practicum.filmorate.exception.ValidationException;
+import ru.yandex.practicum.filmorate.mapper.FilmMapper;
 import ru.yandex.practicum.filmorate.model.Film;
-import ru.yandex.practicum.filmorate.model.User;
-import ru.yandex.practicum.filmorate.storage.film.FilmStorage;
-import ru.yandex.practicum.filmorate.storage.user.UserStorage;
+import ru.yandex.practicum.filmorate.model.Genre;
+import ru.yandex.practicum.filmorate.model.MpaRating;
 import java.time.LocalDate;
-import java.util.Collection;
+import java.util.*;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
 public class FilmService {
-    private final FilmStorage filmStorage;
+    private final FilmDbStorage filmDbStorage;
+    private final LikesDbStorage likesDbStorage;
+    private final MpaRatingDbStorage mpaRatingDbStorage;
+    private final GenreDbStorage genreDbStorage;
 
     private static final LocalDate MIN_RELEASE_DATE = LocalDate.of(1895, 12, 28);
-    private final UserStorage userStorage;
 
-    public Film create(Film film) {
+    public FilmDto create(NewFilmRequest request) {
+        Film film = FilmMapper.mapToFilm(request);
         validateReleaseDate(film);
-        return filmStorage.create(film);
+        //mpa
+        if (request.getMpa() != null) {
+            MpaRating mpa = mpaRatingDbStorage.findById(request.getMpa().getId())
+                    .orElseThrow(() -> new NotFoundException("MPA не найден"));
+            film.setMpa(mpa);
+        }
+        //genres
+        if (request.getGenres() != null && !request.getGenres().isEmpty()) {
+            //получаем список id жанров
+            Set<Long> genreIds = request.getGenres().stream()
+                    .map(GenreDto::getId)
+                    .collect(Collectors.toSet());
+
+            Set<Genre> genres = new HashSet<>(genreDbStorage.findGenresByIds(genreIds));
+
+            Set<Long> foundIds = genres.stream()
+                    .map(Genre::getId)
+                    .collect(Collectors.toSet());
+
+            // ищем проблемные id
+            Set<Long> missingIds = new HashSet<>(genreIds);
+            missingIds.removeAll(foundIds); //получили список отсутствующий в БД id жанров
+
+            if (!missingIds.isEmpty()) {
+                throw new NotFoundException("Жанры не найдены: " + missingIds);
+            }
+
+            film.setGenres(genres);
+        }
+
+        film = filmDbStorage.create(film);
+        return FilmMapper.mapToFilmDto(film);
     }
 
-    public Film update(Film film) {
-        Film existingFilm = filmStorage.findById(film.getId());
-        validateReleaseDate(film);
-        return filmStorage.update(film);
+    public FilmDto update(UpdateFilmRequest request) {
+        // пробуем найти пользователя, если нет — выбросится NotFoundException
+        Film updatedFilm = filmDbStorage.findById(request.getId())
+                .map(film -> FilmMapper.updateFilmFields(film, request))
+                .orElseThrow(() -> new NotFoundException("Фильм не найден"));
+        validateReleaseDate(updatedFilm);
+        updatedFilm = filmDbStorage.update(updatedFilm);
+        return FilmMapper.mapToFilmDto(updatedFilm);
     }
 
-    public Collection<Film> findAll() {
-        return filmStorage.findAll();
+    public Collection<FilmDto> findAll() {
+        return filmDbStorage.findAll().stream()
+                .map(this::getFilmExtensions)
+                .map(FilmMapper::mapToFilmDto)
+                .collect(Collectors.toList());
     }
 
-    public Film findById(Long id) {
-        return filmStorage.findById(id);
+    public FilmDto findById(Long id) {
+        return filmDbStorage.findById(id)
+                .map(this::getFilmExtensions)
+                .map(FilmMapper::mapToFilmDto)
+                .orElseThrow(() -> new NotFoundException("Фильм не найден с ID: " + id));
     }
 
     public void setLike(Long filmId, Long userId) {
-        Film film = filmStorage.findById(filmId);
-        User user = userStorage.findById(userId);
-        film.getUserLikes().add(userId);
+        if (!likesDbStorage.isLiked(filmId, userId)) {
+            likesDbStorage.addLike(filmId, userId);
+        }
     }
 
     public void removeLike(Long filmId, Long userId) {
-        Film film = filmStorage.findById(filmId);
-        User user = userStorage.findById(userId);
-        film.getUserLikes().remove(userId);
+        likesDbStorage.removeLike(filmId, userId);
     }
 
-    public Collection<Film> getPopularFilms(int count) {
+    public Collection<FilmDto> getPopularFilms(int count) {
         if (count <= 0) {
             throw new ValidationException("count должен быть больше 0");
         }
-        return filmStorage.findAll().stream()
-                // сортируем по количеству лайков (по убыванию)
+
+        List<Film> films = filmDbStorage.findAll();
+
+        Map<Long, Integer> likesMap = likesDbStorage.getLikesCountForFilms(
+                films.stream()
+                        .map(Film::getId)
+                        .collect(Collectors.toList())
+        );
+
+        return films.stream()
+                .map(this::getFilmExtensions)
                 .sorted((f1, f2) -> Integer.compare(
-                        f2.getUserLikes().size(),
-                        f1.getUserLikes().size()
+                        likesMap.getOrDefault(f2.getId(), 0),
+                        likesMap.getOrDefault(f1.getId(), 0)
                 ))
-                // берем в кол-ве count
                 .limit(count)
-                .toList();
+                .map(FilmMapper::mapToFilmDto)
+                .collect(Collectors.toList());
     }
 
     private void validateReleaseDate(Film film) {
@@ -70,5 +128,20 @@ public class FilmService {
                     "Дата релиза не может быть раньше 28 декабря 1895 года"
             );
         }
+    }
+
+    private Film getFilmExtensions(Film film) {
+        // MPA
+        if (film.getMpa() != null) {
+            film.setMpa(
+                    mpaRatingDbStorage.findById(film.getMpa().getId())
+                            .orElseThrow(() -> new NotFoundException("MPA не найден"))
+            );
+        }
+        // Genres
+        if (film.getId() != null) {
+            film.setGenres(genreDbStorage.findByFilmId(film.getId()));
+        }
+        return film;
     }
 }
