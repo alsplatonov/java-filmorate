@@ -16,6 +16,8 @@ public class UserDbStorage extends BaseRepository<User> implements UserStorage {
     private static final String INSERT_QUERY = "INSERT INTO users(login, name, email, birthday)" +
             "VALUES (?, ?, ?, ?)";
     private static final String UPDATE_QUERY = "UPDATE users SET login = ?, name = ?, email = ?, birthday = ? WHERE id = ?";
+    private static final String DELETE_BY_ID_QUERY = "DELETE FROM users WHERE id = ?";
+
 
     public UserDbStorage(JdbcTemplate jdbc, RowMapper<User> mapper) {
         super(jdbc, mapper);
@@ -29,6 +31,15 @@ public class UserDbStorage extends BaseRepository<User> implements UserStorage {
     @Override
     public Optional<User> findById(Long userId) {
         return findOne(FIND_BY_ID_QUERY, userId);
+    }
+
+    @Override
+    public User delete(Long userId) {
+        Optional<User> deleteUser = findById(userId);
+        if (delete(DELETE_BY_ID_QUERY, userId)) {
+            return deleteUser.get();
+        }
+        return null;
     }
 
     @Override

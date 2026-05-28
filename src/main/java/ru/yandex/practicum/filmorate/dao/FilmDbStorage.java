@@ -18,6 +18,7 @@ public class FilmDbStorage extends BaseRepository<Film> implements FilmStorage {
     private static final String UPDATE_QUERY = "UPDATE films SET name = ?, description = ?, release_date = ?, " +
             "duration = ? WHERE id = ?";
     private static final String INSERT_FILM_GENRE = "INSERT INTO film_genres (film_id, genre_id) VALUES (?, ?)";
+    private static final String DELETE_BY_ID_QUERY = "DELETE FROM films WHERE id = ?";
 
     public FilmDbStorage(JdbcTemplate jdbc, RowMapper<Film> mapper) {
         super(jdbc, mapper);
@@ -31,6 +32,15 @@ public class FilmDbStorage extends BaseRepository<Film> implements FilmStorage {
     @Override
     public Optional<Film> findById(Long userId) {
         return findOne(FIND_BY_ID_QUERY, userId);
+    }
+
+    @Override
+    public Film delete(Long filmId) {
+        Optional<Film> deleteFilm = findById(filmId);
+        if (delete(DELETE_BY_ID_QUERY, filmId)) {
+            return deleteFilm.get();
+        }
+        return null;
     }
 
     @Override

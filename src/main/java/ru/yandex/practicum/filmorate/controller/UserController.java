@@ -62,4 +62,12 @@ public class UserController {
     public Collection<UserDto> findCommonFriends(@PathVariable Long id, @PathVariable Long otherId) {
         return userService.getCommonFriends(id, otherId);
     }
+
+    @DeleteMapping("/{userId}")
+    @ResponseStatus(HttpStatus.NO_CONTENT)
+    public UserDto delete(@PathVariable Long userId) {
+        log.info("Удаление пользователя с id {}", userId);
+        return userService.delete(userId);
+    }
+
 }
