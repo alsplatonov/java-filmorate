@@ -37,7 +37,6 @@ public class UserService {
 
     public Collection<UserDto> findAll() {
         return userDbStorage.findAll().stream()
-                .sorted(Comparator.comparing(User::getId))
                 .map(UserMapper::mapToUserDto)
                 .collect(Collectors.toList());
     }
