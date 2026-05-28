@@ -34,6 +34,7 @@ public class FilmController {
     }
 
     @GetMapping
+    @ResponseStatus(HttpStatus.OK)
     public Collection<FilmDto> findAll() {
         return filmService.findAll();
     }

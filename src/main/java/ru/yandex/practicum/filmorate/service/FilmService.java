@@ -78,7 +78,6 @@ public class FilmService {
         return filmDbStorage.findAll().stream()
                 .map(this::getFilmExtensions)
                 .map(FilmMapper::mapToFilmDto)
-                .sorted(Comparator.comparing(FilmDto::getId))
                 .collect(Collectors.toList());
     }
 
