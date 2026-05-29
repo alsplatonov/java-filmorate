@@ -6,17 +6,22 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.jdbc.core.JdbcTemplate;
+import ru.yandex.practicum.filmorate.dao.DirectorDbStorage;
 import ru.yandex.practicum.filmorate.dao.FilmDbStorage;
+import ru.yandex.practicum.filmorate.model.Director;
 import ru.yandex.practicum.filmorate.model.Film;
 import ru.yandex.practicum.filmorate.model.MpaRating;
 import java.time.LocalDate;
 import java.util.List;
+import java.util.Set;
+
 import static org.assertj.core.api.Assertions.assertThat;
 
 @SpringBootTest
 @RequiredArgsConstructor(onConstructor_ = @Autowired)
 class FilmDbStorageTest {
     private final FilmDbStorage filmStorage;
+    private final DirectorDbStorage directorStorage;
 
     @Autowired
     private JdbcTemplate jdbcTemplate;
@@ -25,12 +30,17 @@ class FilmDbStorageTest {
     void cleanDb() {
         jdbcTemplate.execute("DELETE FROM likes");
         jdbcTemplate.execute("DELETE FROM film_genres");
+        jdbcTemplate.execute("DELETE FROM film_directors");
         jdbcTemplate.execute("DELETE FROM films");
+        jdbcTemplate.execute("DELETE FROM directors");
     }
 
     @Test
-    void shouldCreateFilm() {
+    void shouldCreateFilmWithDirector() {
+        Director director = directorStorage.create(createDirector("Nolan"));
+
         Film film = createFilm("Film 1");
+        film.setDirector(Set.of(director));
 
         Film created = filmStorage.create(film);
 
@@ -67,6 +77,51 @@ class FilmDbStorageTest {
         assertThat(films).hasSize(2);
     }
 
+    @Test
+    void shouldGetFilmsByDirectorSortedByYear() {
+        Director director = directorStorage.create(createDirector("Nolan"));
+
+        Film f1 = createFilm("F1");
+        f1.setReleaseDate(LocalDate.of(2001, 1, 1));
+        f1.setDirector(Set.of(director));
+
+        Film f2 = createFilm("F2");
+        f2.setReleaseDate(LocalDate.of(1999, 1, 1));
+        f2.setDirector(Set.of(director));
+
+        filmStorage.create(f1);
+        filmStorage.create(f2);
+
+        List<Film> films = filmStorage.getFilmsByDirector(director.getId(), "year");
+
+        assertThat(films).hasSize(2);
+        assertThat(films.get(0).getReleaseDate())
+                .isBefore(films.get(1).getReleaseDate());
+    }
+
+    @Test
+    void shouldGetFilmsByDirectorSortedByLikes() {
+        Director director = directorStorage.create(createDirector("Nolan"));
+
+        Film f1 = createFilm("F1");
+        f1.setDirector(Set.of(director));
+        f1 = filmStorage.create(f1);
+
+        Film f2 = createFilm("F2");
+        f2.setDirector(Set.of(director));
+        f2 = filmStorage.create(f2);
+
+        // имитируем лайки
+        jdbcTemplate.update("INSERT INTO likes (film_id, user_id) VALUES (?, ?)", f2.getId(), 1);
+        jdbcTemplate.update("INSERT INTO likes (film_id, user_id) VALUES (?, ?)", f2.getId(), 2);
+
+        jdbcTemplate.update("INSERT INTO likes (film_id, user_id) VALUES (?, ?)", f1.getId(), 3);
+
+        List<Film> films = filmStorage.getFilmsByDirector(director.getId(), "likes");
+
+        assertThat(films.get(0).getId()).isEqualTo(f2.getId());
+    }
+
     private Film createFilm(String name) {
         Film film = new Film();
         film.setName(name);
@@ -75,5 +130,11 @@ class FilmDbStorageTest {
         film.setDuration(120);
         film.setMpa(new MpaRating(1L, null));
         return film;
+    }
+
+    private Director createDirector(String name) {
+        Director director = new Director();
+        director.setName(name);
+        return director;
     }
 }
