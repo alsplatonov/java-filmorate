@@ -8,9 +8,12 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.jdbc.core.JdbcTemplate;
 import ru.yandex.practicum.filmorate.dao.DirectorDbStorage;
 import ru.yandex.practicum.filmorate.dao.FilmDbStorage;
+import ru.yandex.practicum.filmorate.dao.UserDbStorage;
 import ru.yandex.practicum.filmorate.model.Director;
 import ru.yandex.practicum.filmorate.model.Film;
 import ru.yandex.practicum.filmorate.model.MpaRating;
+import ru.yandex.practicum.filmorate.model.User;
+
 import java.time.LocalDate;
 import java.util.List;
 import java.util.Set;
@@ -25,6 +28,9 @@ class FilmDbStorageTest {
 
     @Autowired
     private JdbcTemplate jdbcTemplate;
+
+    @Autowired
+    private UserDbStorage userStorage;
 
     @BeforeEach
     void cleanDb() {
@@ -103,6 +109,10 @@ class FilmDbStorageTest {
     void shouldGetFilmsByDirectorSortedByLikes() {
         Director director = directorStorage.create(createDirector("Nolan"));
 
+        User u1 = userStorage.create(createUser("u1"));
+        User u2 = userStorage.create(createUser("u2"));
+        User u3 = userStorage.create(createUser("u3"));
+
         Film f1 = createFilm("F1");
         f1.setDirector(Set.of(director));
         f1 = filmStorage.create(f1);
@@ -112,10 +122,10 @@ class FilmDbStorageTest {
         f2 = filmStorage.create(f2);
 
         // имитируем лайки
-        jdbcTemplate.update("INSERT INTO likes (film_id, user_id) VALUES (?, ?)", f2.getId(), 1);
-        jdbcTemplate.update("INSERT INTO likes (film_id, user_id) VALUES (?, ?)", f2.getId(), 2);
+        jdbcTemplate.update("INSERT INTO likes (film_id, user_id) VALUES (?, ?)", f2.getId(), u1.getId());
+        jdbcTemplate.update("INSERT INTO likes (film_id, user_id) VALUES (?, ?)", f2.getId(), u2.getId());
 
-        jdbcTemplate.update("INSERT INTO likes (film_id, user_id) VALUES (?, ?)", f1.getId(), 3);
+        jdbcTemplate.update("INSERT INTO likes (film_id, user_id) VALUES (?, ?)", f1.getId(), u3.getId());
 
         List<Film> films = filmStorage.getFilmsByDirector(director.getId(), "likes");
 
@@ -136,5 +146,14 @@ class FilmDbStorageTest {
         Director director = new Director();
         director.setName(name);
         return director;
+    }
+
+    private User createUser(String email) {
+        User user = new User();
+        user.setEmail(email);
+        user.setLogin(email);
+        user.setName("Name");
+        user.setBirthday(LocalDate.of(1990, 1, 1));
+        return user;
     }
 }
