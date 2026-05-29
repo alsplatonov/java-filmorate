@@ -176,19 +176,19 @@ public class FilmService {
         return film;
     }
 
-    private <T, ID> Set<T> resolveEntities(
-            Set<ID> ids,
-            Function<Set<ID>, Collection<T>> finder,
-            Function<T, ID> idExtractor,
+    private <T, K> Set<T> resolveEntities(
+            Set<K> ids,
+            Function<Set<K>, Collection<T>> finder,
+            Function<T, K> idExtractor,
             String errorMessage
     ) {
         Set<T> entities = new HashSet<>(finder.apply(ids));
 
-        Set<ID> foundIds = entities.stream()
+        Set<K> foundIds = entities.stream()
                 .map(idExtractor)
                 .collect(Collectors.toSet());
 
-        Set<ID> missingIds = new HashSet<>(ids);
+        Set<K> missingIds = new HashSet<>(ids);
         missingIds.removeAll(foundIds);
 
         if (!missingIds.isEmpty()) {
