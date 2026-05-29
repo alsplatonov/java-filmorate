@@ -6,9 +6,7 @@ import ru.yandex.practicum.filmorate.dao.DirectorDbStorage;
 import ru.yandex.practicum.filmorate.dto.*;
 import ru.yandex.practicum.filmorate.exception.NotFoundException;
 import ru.yandex.practicum.filmorate.mapper.DirectorMapper;
-import ru.yandex.practicum.filmorate.mapper.UserMapper;
 import ru.yandex.practicum.filmorate.model.Director;
-import ru.yandex.practicum.filmorate.model.User;
 import java.util.Collection;
 import java.util.stream.Collectors;
 
