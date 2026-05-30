@@ -33,16 +33,32 @@ public class DirectorController {
 
     @GetMapping
     public Collection<DirectorDto> findAll() {
-        return directorService.findAll();
+        log.info("Запрос на получение всех режиссёров");
+
+        Collection<DirectorDto> directors = directorService.findAll();
+
+        log.info("Получено режиссёров: {}", directors.size());
+
+        return directors;
     }
 
     @GetMapping("/{id}")
     public DirectorDto findById(@PathVariable Long id) {
-        return directorService.findById(id);
+        log.info("Запрос режиссёра с id={}", id);
+
+        DirectorDto director = directorService.findById(id);
+
+        log.info("Найден режиссёр: {}", director);
+
+        return director;
     }
 
     @DeleteMapping("/{id}")
     public void removeDirector(@PathVariable Long id) {
+        log.info("Запрос на удаление режиссёра с id={}", id);
+
         directorService.removeDirector(id);
+
+        log.info("Режиссёр с id={} успешно удалён", id);
     }
 }
