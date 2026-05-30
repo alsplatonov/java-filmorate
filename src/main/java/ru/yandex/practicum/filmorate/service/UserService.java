@@ -8,6 +8,7 @@ import ru.yandex.practicum.filmorate.dto.NewUserRequest;
 import ru.yandex.practicum.filmorate.dto.UpdateUserRequest;
 import ru.yandex.practicum.filmorate.dto.UserDto;
 import ru.yandex.practicum.filmorate.exception.NotFoundException;
+import ru.yandex.practicum.filmorate.exception.ValidationException;
 import ru.yandex.practicum.filmorate.mapper.UserMapper;
 import ru.yandex.practicum.filmorate.model.User;
 import java.util.*;
@@ -90,4 +91,16 @@ public class UserService {
                 .map(UserMapper::mapToUserDto)
                 .collect(Collectors.toSet());
     }
+
+    public UserDto delete(Long userId) {
+        if (userId == null) {
+            throw new ValidationException("Id пользователя не должен быть null");
+        }
+        userDbStorage.findById(userId)
+                .orElseThrow(() -> {
+                    throw new NotFoundException(String.format("Пользователь с id %d не найден для удаления.\n", userId));
+                });
+        return UserMapper.mapToUserDto(userDbStorage.delete(userId));
+    }
+
 }
