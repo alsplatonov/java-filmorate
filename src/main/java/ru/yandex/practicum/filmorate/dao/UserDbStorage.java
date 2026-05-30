@@ -12,7 +12,6 @@ import java.util.Optional;
 @Repository
 public class UserDbStorage extends BaseRepository<User> implements UserStorage {
     private static final String FIND_ALL_QUERY = "SELECT * FROM users ORDER BY id";
-    private static final String FIND_BY_EMAIL_QUERY = "SELECT * FROM users WHERE email = ?";
     private static final String FIND_BY_ID_QUERY = "SELECT * FROM users WHERE id = ?";
     private static final String INSERT_QUERY = "INSERT INTO users(login, name, email, birthday)" +
             "VALUES (?, ?, ?, ?)";
@@ -46,10 +45,15 @@ public class UserDbStorage extends BaseRepository<User> implements UserStorage {
     @Override
     public Collection<Long> findSimilarUser(Long userId) {
         return jdbc.queryForList(FIND_SIMILAR_USER, Long.class, userId, userId);
+    }
+
+    @Override
     public User delete(Long userId) {
         Optional<User> deleteUser = findById(userId);
-        if (delete(DELETE_BY_ID_QUERY, userId)) {
-            return deleteUser.get();
+        if (deleteUser.isPresent()) {
+            if (delete(DELETE_BY_ID_QUERY, userId)) {
+                return deleteUser.get();
+            }
         }
         return null;
     }

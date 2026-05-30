@@ -16,6 +16,7 @@ public interface FilmStorage {
     Optional<Film> findById(Long id);
 
     Collection<Film> findRecommendations(Long userId);
+
     Film delete(Long filmId);
 
     List<Film> getFilmsByDirector(Long directorId, String sortBy);

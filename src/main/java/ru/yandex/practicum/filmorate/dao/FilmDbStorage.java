@@ -83,10 +83,15 @@ public class FilmDbStorage extends BaseRepository<Film> implements FilmStorage {
         }
         Long similarUserId = similarUsers.getFirst();
         return findMany(FIND_RECOMMENDATIONS, similarUserId, userId);
+    }
+
+    @Override
     public Film delete(Long filmId) {
         Optional<Film> deleteFilm = findById(filmId);
-        if (delete(DELETE_BY_ID_QUERY, filmId)) {
-            return deleteFilm.get();
+        if (deleteFilm.isPresent()) {
+            if (delete(DELETE_BY_ID_QUERY, filmId)) {
+                return deleteFilm.get();
+            }
         }
         return null;
     }
