@@ -132,25 +132,6 @@ public class FilmService {
                 .collect(Collectors.toList());
     }
 
-    private Collection<FilmDto> getPopularFilms() {
-        List<Film> films = filmDbStorage.findAll();
-
-        Map<Long, Integer> likesMap = likesDbStorage.getLikesCountForFilms(
-                films.stream()
-                        .map(Film::getId)
-                        .collect(Collectors.toList())
-        );
-
-        return films.stream()
-                .map(this::getFilmExtensions)
-                .sorted((f1, f2) -> Integer.compare(
-                        likesMap.getOrDefault(f2.getId(), 0),
-                        likesMap.getOrDefault(f1.getId(), 0)
-                ))
-                .map(FilmMapper::mapToFilmDto)
-                .collect(Collectors.toList());
-    }
-
     public List<FilmDto> findRecommendationFilms(Long userId) {
         return filmDbStorage.findRecommendations(userId).stream()
                 .map(FilmMapper::mapToFilmDto)
@@ -169,37 +150,6 @@ public class FilmService {
                 .map(this::getFilmExtensions)
                 .map(FilmMapper::mapToFilmDto)
                 .toList();
-    }
-
-    private void validateReleaseDate(Film film) {
-        if (film.getReleaseDate() == null || film.getReleaseDate().isBefore(MIN_RELEASE_DATE)) {
-            throw new ValidationException(
-                    "Дата релиза не может быть раньше 28 декабря 1895 года"
-            );
-        }
-    }
-
-    private Film getFilmExtensions(Film film) {
-        // MPA
-        if (film.getMpa() != null) {
-            film.setMpa(
-                    mpaRatingDbStorage.findById(film.getMpa().getId())
-                            .orElseThrow(() -> new NotFoundException("MPA не найден"))
-            );
-        }
-        // Genres
-        if (film.getId() != null) {
-            film.setGenres(genreDbStorage.findByFilmId(film.getId()));
-        }
-        // Directors
-        if (film.getDirector() != null) {
-            if (film.getId() != null) {
-                film.setDirector(
-                        directorDbStorage.findByFilmId(film.getId())
-                );
-            }
-        }
-        return film;
     }
 
     public Collection<FilmDto> getCommonFilms(Long userId, Long friendId) {
@@ -234,6 +184,37 @@ public class FilmService {
         return FilmMapper.mapToFilmDto(filmDbStorage.delete(filmId));
     }
 
+    private void validateReleaseDate(Film film) {
+        if (film.getReleaseDate() == null || film.getReleaseDate().isBefore(MIN_RELEASE_DATE)) {
+            throw new ValidationException(
+                    "Дата релиза не может быть раньше 28 декабря 1895 года"
+            );
+        }
+    }
+
+    private Film getFilmExtensions(Film film) {
+        // MPA
+        if (film.getMpa() != null) {
+            film.setMpa(
+                    mpaRatingDbStorage.findById(film.getMpa().getId())
+                            .orElseThrow(() -> new NotFoundException("MPA не найден"))
+            );
+        }
+        // Genres
+        if (film.getId() != null) {
+            film.setGenres(genreDbStorage.findByFilmId(film.getId()));
+        }
+        // Directors
+        if (film.getDirector() != null) {
+            if (film.getId() != null) {
+                film.setDirector(
+                        directorDbStorage.findByFilmId(film.getId())
+                );
+            }
+        }
+        return film;
+    }
+
     private <T, K> Set<T> resolveEntities(
             Set<K> ids,
             Function<Set<K>, Collection<T>> finder,
@@ -254,5 +235,24 @@ public class FilmService {
         }
 
         return entities;
+    }
+
+    private Collection<FilmDto> getPopularFilms() {
+        List<Film> films = filmDbStorage.findAll();
+
+        Map<Long, Integer> likesMap = likesDbStorage.getLikesCountForFilms(
+                films.stream()
+                        .map(Film::getId)
+                        .collect(Collectors.toList())
+        );
+
+        return films.stream()
+                .map(this::getFilmExtensions)
+                .sorted((f1, f2) -> Integer.compare(
+                        likesMap.getOrDefault(f2.getId(), 0),
+                        likesMap.getOrDefault(f1.getId(), 0)
+                ))
+                .map(FilmMapper::mapToFilmDto)
+                .collect(Collectors.toList());
     }
 }
