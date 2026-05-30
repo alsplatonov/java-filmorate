@@ -15,6 +15,8 @@ public interface FilmStorage {
 
     Optional<Film> findById(Long id);
 
+    Film delete(Long filmId);
+
     List<Film> getFilmsByDirector(Long directorId, String sortBy);
 }
 

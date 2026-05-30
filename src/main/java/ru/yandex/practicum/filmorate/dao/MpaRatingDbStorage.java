@@ -10,9 +10,9 @@ import java.util.Optional;
 
 @Repository
 public class MpaRatingDbStorage extends BaseRepository<MpaRating> implements MpaRatingStorage {
-    private static final String FIND_ALL_MPA = "SELECT * FROM mpa_ratings order by id";
+    private static final String FIND_ALL_MPA = "SELECT * FROM mpa_ratings ORDER BY id";
     private static final String FIND_BY_MPA_ID = "SELECT * FROM mpa_ratings WHERE id = ?";
-    private static final String FIND_BY_MAP_NAME = "SELECT * FROM mpa_ratings WHERE name = ?";
+    private static final String FIND_BY_MPA_NAME = "SELECT * FROM mpa_ratings WHERE name = ?";
 
     public MpaRatingDbStorage(JdbcTemplate jdbc, RowMapper<MpaRating> mapper) {
         super(jdbc, mapper);

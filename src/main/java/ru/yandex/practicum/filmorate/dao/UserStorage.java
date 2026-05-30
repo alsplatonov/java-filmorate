@@ -12,5 +12,8 @@ public interface UserStorage {
     Collection<User> findAll();
 
     Optional<User> findById(Long id);
+
+    User delete(Long userId);
+
 }
 
