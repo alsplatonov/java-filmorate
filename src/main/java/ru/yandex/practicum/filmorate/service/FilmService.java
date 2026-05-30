@@ -2,19 +2,18 @@ package ru.yandex.practicum.filmorate.service;
 
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
-import ru.yandex.practicum.filmorate.dao.FilmDbStorage;
-import ru.yandex.practicum.filmorate.dao.GenreDbStorage;
-import ru.yandex.practicum.filmorate.dao.LikesDbStorage;
-import ru.yandex.practicum.filmorate.dao.MpaRatingDbStorage;
+import ru.yandex.practicum.filmorate.dao.*;
 import ru.yandex.practicum.filmorate.dto.*;
 import ru.yandex.practicum.filmorate.exception.NotFoundException;
 import ru.yandex.practicum.filmorate.exception.ValidationException;
 import ru.yandex.practicum.filmorate.mapper.FilmMapper;
+import ru.yandex.practicum.filmorate.model.Director;
 import ru.yandex.practicum.filmorate.model.Film;
 import ru.yandex.practicum.filmorate.model.Genre;
 import ru.yandex.practicum.filmorate.model.MpaRating;
 import java.time.LocalDate;
 import java.util.*;
+import java.util.function.Function;
 import java.util.stream.Collectors;
 
 @Service
@@ -26,6 +25,7 @@ public class FilmService {
     private final GenreDbStorage genreDbStorage;
 
     private static final LocalDate MIN_RELEASE_DATE = LocalDate.of(1895, 12, 28);
+    private final DirectorDbStorage directorDbStorage;
 
     public FilmDto create(NewFilmRequest request) {
         Film film = FilmMapper.mapToFilm(request);
@@ -38,26 +38,35 @@ public class FilmService {
         }
         //genres
         if (request.getGenres() != null && !request.getGenres().isEmpty()) {
-            //получаем список id жанров
+
             Set<Long> genreIds = request.getGenres().stream()
                     .map(GenreDto::getId)
                     .collect(Collectors.toSet());
 
-            Set<Genre> genres = new HashSet<>(genreDbStorage.findGenresByIds(genreIds));
-
-            Set<Long> foundIds = genres.stream()
-                    .map(Genre::getId)
-                    .collect(Collectors.toSet());
-
-            // ищем проблемные id
-            Set<Long> missingIds = new HashSet<>(genreIds);
-            missingIds.removeAll(foundIds); //получили список отсутствующий в БД id жанров
-
-            if (!missingIds.isEmpty()) {
-                throw new NotFoundException("Жанры не найдены: " + missingIds);
-            }
+            Set<Genre> genres = resolveEntities(
+                    genreIds,
+                    genreDbStorage::findGenresByIds,
+                    Genre::getId,
+                    "Жанры не найдены: "
+            );
 
             film.setGenres(genres);
+        }
+        //directors
+        if (request.getDirector() != null && !request.getDirector().isEmpty()) {
+
+            Set<Long> directorIds = request.getDirector().stream()
+                    .map(DirectorDto::getId)
+                    .collect(Collectors.toSet());
+
+            Set<Director> directors = resolveEntities(
+                    directorIds,
+                    directorDbStorage::findDirectorsByIds,
+                    Director::getId,
+                    "Режиссёры не найдены: "
+            );
+
+            film.setDirector(directors);
         }
 
         film = filmDbStorage.create(film);
@@ -112,6 +121,26 @@ public class FilmService {
                 .collect(Collectors.toList());
     }
 
+    public List<FilmDto> findRecommendationFilms(Long userId) {
+        return filmDbStorage.findRecommendations(userId).stream()
+                .map(FilmMapper::mapToFilmDto)
+                .collect(Collectors.toList());
+    }
+
+    public List<FilmDto> getFilmsByDirector(Long directorId, String sortBy) {
+
+        // проверка, что режиссёр существует
+        Director director = directorDbStorage.findById(directorId)
+                .orElseThrow(() -> new NotFoundException("Режиссёр не найден"));
+
+        List<Film> films = filmDbStorage.getFilmsByDirector(director.getId(), sortBy);
+
+        return films.stream()
+                .map(this::getFilmExtensions)
+                .map(FilmMapper::mapToFilmDto)
+                .toList();
+    }
+
     private void validateReleaseDate(Film film) {
         if (film.getReleaseDate() == null || film.getReleaseDate().isBefore(MIN_RELEASE_DATE)) {
             throw new ValidationException(
@@ -132,6 +161,47 @@ public class FilmService {
         if (film.getId() != null) {
             film.setGenres(genreDbStorage.findByFilmId(film.getId()));
         }
+        // Directors
+        if (film.getDirector() != null) {
+            if (film.getId() != null) {
+                film.setDirector(
+                        directorDbStorage.findByFilmId(film.getId())
+                );
+            }
+        }
         return film;
+    }
+
+    public FilmDto delete(Long filmId) {
+        if (filmId == null) {
+            throw new ValidationException("ID фильма не может быть null.");
+        }
+        filmDbStorage.findById(filmId)
+                .orElseThrow(() -> {
+                    throw new NotFoundException(String.format("Фильм с id %d не найден для удаления\n", filmId));
+                });
+        return FilmMapper.mapToFilmDto(filmDbStorage.delete(filmId));
+    }
+
+    private <T, K> Set<T> resolveEntities(
+            Set<K> ids,
+            Function<Set<K>, Collection<T>> finder,
+            Function<T, K> idExtractor,
+            String errorMessage
+    ) {
+        Set<T> entities = new HashSet<>(finder.apply(ids));
+
+        Set<K> foundIds = entities.stream()
+                .map(idExtractor)
+                .collect(Collectors.toSet());
+
+        Set<K> missingIds = new HashSet<>(ids);
+        missingIds.removeAll(foundIds);
+
+        if (!missingIds.isEmpty()) {
+            throw new NotFoundException(errorMessage + missingIds);
+        }
+
+        return entities;
     }
 }
