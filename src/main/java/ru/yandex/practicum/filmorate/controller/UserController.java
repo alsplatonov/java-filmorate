@@ -73,6 +73,7 @@ public class UserController {
     public List<FilmDto> findRecommendationFilms(@PathVariable Long id) {
         return filmService.findRecommendationFilms(id);
     }
+
     @DeleteMapping("/{userId}")
     @ResponseStatus(HttpStatus.NO_CONTENT)
     public UserDto delete(@PathVariable Long userId) {
