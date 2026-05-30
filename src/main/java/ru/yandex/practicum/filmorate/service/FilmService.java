@@ -122,6 +122,12 @@ public class FilmService {
                 .collect(Collectors.toList());
     }
 
+    public List<FilmDto> findRecommendationFilms(Long userId) {
+        return filmDbStorage.findRecommendations(userId).stream()
+                .map(FilmMapper::mapToFilmDto)
+                .collect(Collectors.toList());
+    }
+
     private void validateReleaseDate(Film film) {
         if (film.getReleaseDate() == null || film.getReleaseDate().isBefore(MIN_RELEASE_DATE)) {
             throw new ValidationException(

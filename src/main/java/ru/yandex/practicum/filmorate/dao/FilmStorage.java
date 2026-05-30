@@ -13,5 +13,7 @@ public interface FilmStorage {
     Collection<Film> findAll();
 
     Optional<Film> findById(Long id);
+
+    Collection<Film> findRecommendations(Long userId);
 }
 
