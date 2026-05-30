@@ -4,6 +4,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.core.RowMapper;
 import org.springframework.stereotype.Repository;
+import ru.yandex.practicum.filmorate.model.Director;
 import ru.yandex.practicum.filmorate.model.Film;
 import ru.yandex.practicum.filmorate.model.Genre;
 
@@ -40,6 +41,22 @@ public class FilmDbStorage extends BaseRepository<Film> implements FilmStorage {
     LikesStorage likesStorage;
     @Autowired
     UserStorage userStorage;
+    private static final String DELETE_BY_ID_QUERY = "DELETE FROM films WHERE id = ?";
+    private static final String INSERT_FILM_DIRECTOR = "INSERT INTO film_directors (film_id, director_id) VALUES (?, ?)";
+    private static final String GET_DIRECTORS_FILMS_SORTED_BY_LIKES =
+            "SELECT f.*, COUNT(l.user_id) AS likes_count " +
+                    "FROM films f " +
+                    "JOIN film_directors fd ON f.id = fd.film_id " +
+                    "LEFT JOIN likes l ON f.id = l.film_id " +
+                    "WHERE fd.director_id = ? " +
+                    "GROUP BY f.id " +
+                    "ORDER BY likes_count DESC";
+    private static final String GET_DIRECTORS_FILMS_SORTED_BY_YEAR =
+            "SELECT f.* " +
+                    "FROM films f " +
+                    "JOIN film_directors fd ON f.id = fd.film_id " +
+                    "WHERE fd.director_id = ? " +
+                    "ORDER BY f.release_date";
 
     public FilmDbStorage(JdbcTemplate jdbc, RowMapper<Film> mapper) {
         super(jdbc, mapper);
@@ -66,6 +83,12 @@ public class FilmDbStorage extends BaseRepository<Film> implements FilmStorage {
         }
         Long similarUserId = similarUsers.getFirst();
         return findMany(FIND_RECOMMENDATIONS, similarUserId, userId);
+    public Film delete(Long filmId) {
+        Optional<Film> deleteFilm = findById(filmId);
+        if (delete(DELETE_BY_ID_QUERY, filmId)) {
+            return deleteFilm.get();
+        }
+        return null;
     }
 
     @Override
@@ -80,6 +103,7 @@ public class FilmDbStorage extends BaseRepository<Film> implements FilmStorage {
         );
         film.setId(id);
         saveFilmGenres(id, film.getGenres());
+        saveFilmDirectors(id, film.getDirector());
         return film;
     }
 
@@ -93,7 +117,18 @@ public class FilmDbStorage extends BaseRepository<Film> implements FilmStorage {
                 film.getDuration(),
                 film.getId()
         );
+        saveFilmGenres(film.getId(), film.getGenres());
+        saveFilmDirectors(film.getId(), film.getDirector());
         return film;
+    }
+
+    @Override
+    public List<Film> getFilmsByDirector(Long directorId, String sortBy) {
+        if ("likes".equalsIgnoreCase(sortBy)) {
+            return findMany(GET_DIRECTORS_FILMS_SORTED_BY_LIKES, directorId);
+        } else {
+            return findMany(GET_DIRECTORS_FILMS_SORTED_BY_YEAR, directorId);
+        }
     }
 
     private void saveFilmGenres(long filmId, Set<Genre> genres) {
@@ -108,6 +143,22 @@ public class FilmDbStorage extends BaseRepository<Film> implements FilmStorage {
                 (ps, genre) -> {
                     ps.setLong(1, filmId);
                     ps.setLong(2, genre.getId());
+                }
+        );
+    }
+
+    private void saveFilmDirectors(long filmId, Set<Director> directors) {
+        if (directors == null || directors.isEmpty()) {
+            return;
+        }
+
+        jdbc.batchUpdate(
+                INSERT_FILM_DIRECTOR,
+                directors,
+                directors.size(),
+                (ps, director) -> {
+                    ps.setLong(1, filmId);
+                    ps.setLong(2, director.getId());
                 }
         );
     }

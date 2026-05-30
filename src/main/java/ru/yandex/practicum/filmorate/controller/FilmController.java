@@ -10,6 +10,7 @@ import ru.yandex.practicum.filmorate.dto.NewFilmRequest;
 import ru.yandex.practicum.filmorate.dto.UpdateFilmRequest;
 import ru.yandex.practicum.filmorate.service.FilmService;
 import java.util.Collection;
+import java.util.List;
 
 @Slf4j
 @RestController
@@ -34,6 +35,7 @@ public class FilmController {
     }
 
     @GetMapping
+    @ResponseStatus(HttpStatus.OK)
     public Collection<FilmDto> findAll() {
         return filmService.findAll();
     }
@@ -58,5 +60,20 @@ public class FilmController {
     @GetMapping("/popular")
     public Collection<FilmDto> findPopularFilms(@RequestParam(defaultValue = "10") int count) {
         return filmService.getPopularFilms(count);
+    }
+
+    @DeleteMapping("/{filmId}")
+    @ResponseStatus(HttpStatus.NO_CONTENT)
+    public FilmDto delete(@PathVariable Long filmId) {
+        log.info("Удаление фильма с id {}", filmId);
+        return filmService.delete(filmId);
+    }
+
+    @GetMapping("/director/{directorId}")
+    public List<FilmDto> getFilmsByDirector(
+            @PathVariable Long directorId,
+            @RequestParam(defaultValue = "year") String sortBy
+    ) {
+        return filmService.getFilmsByDirector(directorId, sortBy);
     }
 }

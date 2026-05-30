@@ -38,6 +38,7 @@ public class UserController {
     }
 
     @GetMapping
+    @ResponseStatus(HttpStatus.OK)
     public Collection<UserDto> findAll() {
         return userService.findAll();
     }
@@ -72,4 +73,11 @@ public class UserController {
     public List<FilmDto> findRecommendationFilms(@PathVariable Long id) {
         return filmService.findRecommendationFilms(id);
     }
+    @DeleteMapping("/{userId}")
+    @ResponseStatus(HttpStatus.NO_CONTENT)
+    public UserDto delete(@PathVariable Long userId) {
+        log.info("Удаление пользователя с id {}", userId);
+        return userService.delete(userId);
+    }
+
 }

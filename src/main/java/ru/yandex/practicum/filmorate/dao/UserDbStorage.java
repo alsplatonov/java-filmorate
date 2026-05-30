@@ -26,6 +26,8 @@ public class UserDbStorage extends BaseRepository<User> implements UserStorage {
             ORDER BY COUNT(*) DESC
             LIMIT 1
             """;
+    private static final String DELETE_BY_ID_QUERY = "DELETE FROM users WHERE id = ?";
+
 
     public UserDbStorage(JdbcTemplate jdbc, RowMapper<User> mapper) {
         super(jdbc, mapper);
@@ -44,6 +46,12 @@ public class UserDbStorage extends BaseRepository<User> implements UserStorage {
     @Override
     public Collection<Long> findSimilarUser(Long userId) {
         return jdbc.queryForList(FIND_SIMILAR_USER, Long.class, userId, userId);
+    public User delete(Long userId) {
+        Optional<User> deleteUser = findById(userId);
+        if (delete(DELETE_BY_ID_QUERY, userId)) {
+            return deleteUser.get();
+        }
+        return null;
     }
 
     @Override
