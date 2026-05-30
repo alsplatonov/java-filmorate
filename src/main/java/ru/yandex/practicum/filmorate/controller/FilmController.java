@@ -10,6 +10,7 @@ import ru.yandex.practicum.filmorate.dto.NewFilmRequest;
 import ru.yandex.practicum.filmorate.dto.UpdateFilmRequest;
 import ru.yandex.practicum.filmorate.service.FilmService;
 import java.util.Collection;
+import java.util.List;
 
 @Slf4j
 @RestController
@@ -64,5 +65,13 @@ public class FilmController {
     public Collection<FilmDto> getCommonFilms(@RequestParam Long userId, @RequestParam Long friendId) {
         log.info("Пользователь {} запросил общие фильмы с {}", userId, friendId);
         return filmService.getCommonFilms(userId, friendId);
+    }
+
+    @GetMapping("/director/{directorId}")
+    public List<FilmDto> getFilmsByDirector(
+            @PathVariable Long directorId,
+            @RequestParam(defaultValue = "year") String sortBy
+    ) {
+        return filmService.getFilmsByDirector(directorId, sortBy);
     }
 }

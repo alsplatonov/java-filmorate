@@ -1,5 +1,6 @@
 package ru.yandex.practicum.filmorate.dto;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Positive;
 import lombok.Data;
@@ -18,6 +19,9 @@ public class UpdateFilmRequest {
 
     private Set<GenreDto> genres;
     private MpaRatingDto mpa;
+
+    @JsonProperty("directors")
+    private Set<DirectorDto> director;
 
     public boolean hasName() {
         return name != null && !name.isBlank();
@@ -41,5 +45,9 @@ public class UpdateFilmRequest {
 
     public boolean hasGenres() {
         return genres != null && !genres.isEmpty();
+    }
+
+    public boolean hasDirectors() {
+        return director != null && !director.isEmpty();
     }
 }
