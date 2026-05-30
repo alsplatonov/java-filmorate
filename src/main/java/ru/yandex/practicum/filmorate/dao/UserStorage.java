@@ -13,6 +13,8 @@ public interface UserStorage {
 
     Optional<User> findById(Long id);
 
+    Collection<Long> findSimilarUser(Long userId);
+
     User delete(Long userId);
 
 }

@@ -33,6 +33,8 @@ public class LikesDbStorage implements LikesStorage {
                     "WHERE film_id IN (%s) " +
                     "GROUP BY film_id";
 
+    private static final String HAS_LIKES = "SELECT COUNT(*) > 0 FROM likes WHERE user_id = ?";
+
     @Override
     public void addLike(long filmId, long userId) {
         jdbc.update(CREATE_LIKE, filmId, userId);
@@ -52,6 +54,12 @@ public class LikesDbStorage implements LikesStorage {
     public boolean isLiked(long filmId, long userId) {
         Integer count = jdbc.queryForObject(CHECK_LIKE_EXISTS, Integer.class, filmId, userId);
         return count != null && count > 0;
+    }
+
+    @Override
+    public boolean hasLikes(Long userId) {
+        Boolean has =  jdbc.queryForObject(HAS_LIKES, Boolean.class, userId);
+        return has != null && has;
     }
 
     public Map<Long, Integer> getLikesCountForFilms(List<Long> filmIds) {
