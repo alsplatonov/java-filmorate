@@ -44,7 +44,8 @@ public class FilmDbStorage extends BaseRepository<Film> implements FilmStorage {
             ORDER BY f.id
             """;
     private static final String DELETE_BY_ID_QUERY = "DELETE FROM films WHERE id = ?";
-    private static final String INSERT_FILM_DIRECTOR = "INSERT INTO film_directors (film_id, director_id) VALUES (?, ?)";
+    private static final String INSERT_FILM_DIRECTOR = "INSERT INTO film_directors (film_id, director_id)" +
+            " VALUES (?, ?)";
     private static final String GET_DIRECTORS_FILMS_SORTED_BY_LIKES =
             "SELECT f.*, COUNT(l.user_id) AS likes_count " +
                     "FROM films f " +
@@ -62,7 +63,7 @@ public class FilmDbStorage extends BaseRepository<Film> implements FilmStorage {
 
     @Autowired
     LikesStorage likesStorage;
-    
+
     @Autowired
     UserStorage userStorage;
 
