@@ -7,6 +7,7 @@ import ru.yandex.practicum.filmorate.model.Director;
 import ru.yandex.practicum.filmorate.model.Film;
 import ru.yandex.practicum.filmorate.model.Genre;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
@@ -90,6 +91,24 @@ public class FilmDbStorage extends BaseRepository<Film> implements FilmStorage {
         }
     }
 
+    @Override
+    public List<Film> searchBy(String query, String by) {
+        String sql = createSQLQuery(by);
+
+        String pattern = "%" + query.toLowerCase() + "%";
+
+        List<Object> params = new ArrayList<>();
+
+        if (by.contains("title")) {
+            params.add(pattern);
+        }
+        if (by.contains("director")) {
+            params.add(pattern);
+        }
+
+        return findMany(sql, params.toArray());
+    }
+
     private void saveFilmGenres(long filmId, Set<Genre> genres) {
         if (genres == null || genres.isEmpty()) {
             return;
@@ -120,5 +139,26 @@ public class FilmDbStorage extends BaseRepository<Film> implements FilmStorage {
                     ps.setLong(2, director.getId());
                 }
         );
+    }
+
+    private String createSQLQuery(String by) {
+        Set<String> filters = Set.of(by.split(","));
+
+        boolean byTitle = filters.contains("title");
+        boolean byDirector = filters.contains("director");
+
+        String where;
+        if (byTitle && byDirector) {
+            where = "(LOWER(f.name) LIKE ? OR LOWER(d.name) LIKE ?)";
+        } else if (byTitle) {
+            where = "LOWER(f.name) LIKE ?";
+        } else {
+            where = "LOWER(d.name) LIKE ?";
+        }
+        return "SELECT f.*, COUNT(fl.user_id) as likes_count " +
+                "FROM films f LEFT JOIN likes fl ON f.id = fl.film_id " +
+                "LEFT JOIN film_directors fd ON f.id = fd.film_id " +
+                "LEFT JOIN directors d ON fd.director_id = d.id " +
+                "WHERE " + where + " GROUP BY f.id ORDER BY likes_count DESC ";
     }
 }

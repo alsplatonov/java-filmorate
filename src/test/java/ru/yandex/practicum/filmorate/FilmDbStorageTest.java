@@ -132,6 +132,55 @@ class FilmDbStorageTest {
         assertThat(films.get(0).getId()).isEqualTo(f2.getId());
     }
 
+    @Test
+    void shouldSearchFilmByTitle() {
+        Film film = createFilm("Inception");
+        filmStorage.create(film);
+
+        List<Film> result = filmStorage.searchBy("Incep", "title");
+
+        assertThat(result)
+                .isNotEmpty();
+        assertThat(result.get(0).getName())
+                .containsIgnoringCase("inception");
+    }
+
+    @Test
+    void shouldSearchFilmByDirector() {
+        Director director = directorStorage.create(createDirector("Nolan"));
+
+        Film film = createFilm("Interstellar");
+        film.setDirector(Set.of(director));
+        filmStorage.create(film);
+
+        List<Film> result = filmStorage.searchBy("Nol", "director");
+
+        assertThat(result)
+                .isNotEmpty();
+        assertThat(result.get(0).getName())
+                .isEqualTo("Interstellar");
+    }
+
+    @Test
+    void shouldSearchFilmByTitleAndDirector() {
+        Director director = directorStorage.create(createDirector("Nolan"));
+
+        Film film1 = createFilm("Matrix");
+        film1.setDirector(Set.of(director));
+        filmStorage.create(film1);
+
+        Film film2 = createFilm("Avatar");
+        filmStorage.create(film2);
+
+        List<Film> result = filmStorage.searchBy("Matrix", "title,director");
+
+        assertThat(result)
+                .hasSize(1);
+
+        assertThat(result.get(0).getName())
+                .isEqualTo("Matrix");
+    }
+
     private Film createFilm(String name) {
         Film film = new Film();
         film.setName(name);
