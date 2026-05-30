@@ -11,6 +11,7 @@ import ru.yandex.practicum.filmorate.model.Director;
 import ru.yandex.practicum.filmorate.model.Film;
 import ru.yandex.practicum.filmorate.model.Genre;
 import ru.yandex.practicum.filmorate.model.MpaRating;
+
 import java.time.LocalDate;
 import java.util.*;
 import java.util.function.Function;
@@ -215,7 +216,7 @@ public class FilmService {
                 .filter(commonLikedFilms::contains)
                 .collect(Collectors.toSet());
     }
-  
+
     public FilmDto delete(Long filmId) {
         if (filmId == null) {
             throw new ValidationException("ID фильма не может быть null.");
