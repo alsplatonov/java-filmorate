@@ -98,26 +98,16 @@ public class FilmService {
         likesDbStorage.removeLike(filmId, userId);
     }
 
-    public Collection<FilmDto> getPopularFilms(int count) {
-        if (count <= 0) {
+    public Collection<FilmDto> getPopularFilms(int limit, Long genreId, Long year) {
+        if (limit <= 0) {
             throw new ValidationException("count должен быть больше 0");
         }
 
-        List<Film> films = filmDbStorage.findAll();
+        // В базе реализованна сортировка и limit
+        List<Film> popularFilms = filmDbStorage.getPopular(limit, genreId, year);
 
-        Map<Long, Integer> likesMap = likesDbStorage.getLikesCountForFilms(
-                films.stream()
-                        .map(Film::getId)
-                        .collect(Collectors.toList())
-        );
-
-        return films.stream()
+        return popularFilms.stream()
                 .map(this::getFilmExtensions)
-                .sorted((f1, f2) -> Integer.compare(
-                        likesMap.getOrDefault(f2.getId(), 0),
-                        likesMap.getOrDefault(f1.getId(), 0)
-                ))
-                .limit(count)
                 .map(FilmMapper::mapToFilmDto)
                 .collect(Collectors.toList());
     }
