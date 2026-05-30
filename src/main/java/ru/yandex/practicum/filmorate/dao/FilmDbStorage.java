@@ -20,6 +20,7 @@ public class FilmDbStorage extends BaseRepository<Film> implements FilmStorage {
     private static final String UPDATE_QUERY = "UPDATE films SET name = ?, description = ?, release_date = ?, " +
             "duration = ? WHERE id = ?";
     private static final String INSERT_FILM_GENRE = "INSERT INTO film_genres (film_id, genre_id) VALUES (?, ?)";
+    private static final String DELETE_BY_ID_QUERY = "DELETE FROM films WHERE id = ?";
     private static final String INSERT_FILM_DIRECTOR = "INSERT INTO film_directors (film_id, director_id) VALUES (?, ?)";
     private static final String GET_DIRECTORS_FILMS_SORTED_BY_LIKES =
             "SELECT f.*, COUNT(l.user_id) AS likes_count " +
@@ -48,6 +49,15 @@ public class FilmDbStorage extends BaseRepository<Film> implements FilmStorage {
     @Override
     public Optional<Film> findById(Long userId) {
         return findOne(FIND_BY_ID_QUERY, userId);
+    }
+
+    @Override
+    public Film delete(Long filmId) {
+        Optional<Film> deleteFilm = findById(filmId);
+        if (delete(DELETE_BY_ID_QUERY, filmId)) {
+            return deleteFilm.get();
+        }
+        return null;
     }
 
     @Override

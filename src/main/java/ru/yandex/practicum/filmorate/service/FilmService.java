@@ -215,6 +215,17 @@ public class FilmService {
                 .filter(commonLikedFilms::contains)
                 .collect(Collectors.toSet());
     }
+  
+    public FilmDto delete(Long filmId) {
+        if (filmId == null) {
+            throw new ValidationException("ID фильма не может быть null.");
+        }
+        filmDbStorage.findById(filmId)
+                .orElseThrow(() -> {
+                    throw new NotFoundException(String.format("Фильм с id %d не найден для удаления\n", filmId));
+                });
+        return FilmMapper.mapToFilmDto(filmDbStorage.delete(filmId));
+    }
 
     private <T, K> Set<T> resolveEntities(
             Set<K> ids,

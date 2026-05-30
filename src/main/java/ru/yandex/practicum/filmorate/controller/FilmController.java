@@ -35,6 +35,7 @@ public class FilmController {
     }
 
     @GetMapping
+    @ResponseStatus(HttpStatus.OK)
     public Collection<FilmDto> findAll() {
         return filmService.findAll();
     }
@@ -65,6 +66,13 @@ public class FilmController {
     public Collection<FilmDto> getCommonFilms(@RequestParam Long userId, @RequestParam Long friendId) {
         log.info("Пользователь {} запросил общие фильмы с {}", userId, friendId);
         return filmService.getCommonFilms(userId, friendId);
+    }  
+      
+    @DeleteMapping("/{filmId}")
+    @ResponseStatus(HttpStatus.NO_CONTENT)
+    public FilmDto delete(@PathVariable Long filmId) {
+        log.info("Удаление фильма с id {}", filmId);
+        return filmService.delete(filmId);
     }
 
     @GetMapping("/director/{directorId}")
