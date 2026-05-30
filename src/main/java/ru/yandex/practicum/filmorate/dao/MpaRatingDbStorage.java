@@ -10,7 +10,7 @@ import java.util.Optional;
 
 @Repository
 public class MpaRatingDbStorage extends BaseRepository<MpaRating> implements MpaRatingStorage {
-    private static final String FIND_ALL_GENRES = "SELECT * FROM mpa_ratings";
+    private static final String FIND_ALL_GENRES = "SELECT * FROM mpa_ratings ORDER BY id";
     private static final String FIND_BY_GENRE_ID = "SELECT * FROM mpa_ratings WHERE id = ?";
     private static final String FIND_BY_GENRE_NAME = "SELECT * FROM mpa_ratings WHERE name = ?";
 
