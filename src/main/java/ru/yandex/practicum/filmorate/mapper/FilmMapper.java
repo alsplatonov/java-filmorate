@@ -3,10 +3,12 @@ package ru.yandex.practicum.filmorate.mapper;
 import lombok.AccessLevel;
 import lombok.NoArgsConstructor;
 import ru.yandex.practicum.filmorate.dto.*;
+import ru.yandex.practicum.filmorate.model.Director;
 import ru.yandex.practicum.filmorate.model.Film;
 import ru.yandex.practicum.filmorate.model.Genre;
 
 import java.util.Comparator;
+import java.util.HashSet;
 import java.util.stream.Collectors;
 import java.util.LinkedHashSet;
 
@@ -20,6 +22,7 @@ public final class FilmMapper {
         film.setDuration(request.getDuration());
         film.setMpa(MpaRatingMapper.mapToRating(request.getMpa()));
         film.setGenres(null);
+        film.setDirector(null);
         return film;
     }
 
@@ -36,6 +39,13 @@ public final class FilmMapper {
                         film.getGenres().stream()
                                 .sorted(Comparator.comparing(Genre::getId))
                                 .map(GenreMapper::mapToGenreDto)
+                                .collect(Collectors.toCollection(LinkedHashSet::new))
+        );
+        dto.setDirectors(
+                film.getDirector() == null ? new HashSet<>() :
+                        film.getDirector().stream()
+                                .sorted(Comparator.comparing(Director::getId))
+                                .map(DirectorMapper::mapToDirectorDto)
                                 .collect(Collectors.toCollection(LinkedHashSet::new))
         );
         return dto;
@@ -56,6 +66,14 @@ public final class FilmMapper {
 
         if (request.hasDuration()) {
             film.setDuration(request.getDuration());
+        }
+
+        if (request.hasDirectors()) {
+            film.setDirector(
+                    request.getDirector().stream()
+                            .map(DirectorMapper::mapToDirector)
+                            .collect(Collectors.toSet())
+            );
         }
 
         //дополнить mpa Genres

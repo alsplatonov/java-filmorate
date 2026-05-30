@@ -32,7 +32,7 @@ SELECT 'Документальный' WHERE NOT EXISTS (SELECT 1 FROM genres WHE
 
 INSERT INTO genres (name)
 SELECT 'Боевик' WHERE NOT EXISTS (SELECT 1 FROM genres WHERE name='Боевик');
-
+/*
 --USERS
 INSERT INTO users(login, name, email, birthday) values
 ('xS5pYhwSCY','Alexis Bergstrom','Enola_McCullough13@gmail.com','1973-04-14');
@@ -41,4 +41,23 @@ INSERT INTO users(login, name, email, birthday) values
 INSERT INTO films(name, description, release_date, duration, mpa_id) values
 ('Mprpkn6rKSgRARY','EUnHlaEF3PtL3aDRtQ4MA2ufhJGeNoeKoEcHIh18CdAW0IkemJ','1962-08-09',
  '138','2');
+*/
 
+--DIRECTORS
+INSERT INTO directors (name)
+SELECT 'sdfcvngm' WHERE NOT EXISTS (SELECT 1 FROM genres WHERE name='sdfcvngm');
+
+INSERT INTO directors (name)
+SELECT 'safsdg' WHERE NOT EXISTS (SELECT 1 FROM genres WHERE name='safsdg');
+
+INSERT INTO directors (name)
+SELECT 'sfddgh' WHERE NOT EXISTS (SELECT 1 FROM genres WHERE name='sfddgh');
+
+INSERT INTO directors (name)
+SELECT 'fdhfgkhk' WHERE NOT EXISTS (SELECT 1 FROM genres WHERE name='fdhfgkhk');
+
+INSERT INTO directors (name)
+SELECT 'ffjfgkghk' WHERE NOT EXISTS (SELECT 1 FROM genres WHERE name='ffjfgkghk');
+
+INSERT INTO directors (name)
+SELECT 'hgkhjlkhj' WHERE NOT EXISTS (SELECT 1 FROM genres WHERE name='hgkhjlkhj');
