@@ -131,13 +131,19 @@ public class FilmService {
                 .collect(Collectors.toList());
     }
 
+    public List<FilmDto> findRecommendationFilms(Long userId) {
+        return filmDbStorage.findRecommendations(userId).stream()
+                .map(FilmMapper::mapToFilmDto)
+                .collect(Collectors.toList());
+    }
+
     public List<FilmDto> getFilmsByDirector(Long directorId, String sortBy) {
 
         // проверка, что режиссёр существует
         Director director = directorDbStorage.findById(directorId)
                 .orElseThrow(() -> new NotFoundException("Режиссёр не найден"));
 
-        List<Film> films = filmDbStorage.getFilmsByDirector(directorId, sortBy);
+        List<Film> films = filmDbStorage.getFilmsByDirector(director.getId(), sortBy);
 
         return films.stream()
                 .map(this::getFilmExtensions)
