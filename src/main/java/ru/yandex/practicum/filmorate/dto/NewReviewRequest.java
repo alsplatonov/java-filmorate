@@ -7,14 +7,14 @@ import lombok.Data;
 @Data
 public class NewReviewRequest {
     @NotBlank(message = "Описание отзыва не может быть пустым")
-    String content;
+    private String content;
 
     @NotNull(message = "Оценка положительности обязательна")
-    Boolean isPositive;
+    private Boolean isPositive;
 
     @NotNull(message = "Id пользователя обязательно")
-    Long userId;
+    private Long userId;
 
     @NotNull(message = "Id фильма обязательно")
-    Long filmId;
+    private Long filmId;
 }

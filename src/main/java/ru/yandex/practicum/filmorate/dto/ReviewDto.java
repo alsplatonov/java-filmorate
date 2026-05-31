@@ -4,10 +4,10 @@ import lombok.Data;
 
 @Data
 public class ReviewDto {
-    Long reviewId;
-    String content;
-    Boolean isPositive;
-    Long userId;
-    Long filmId;
-    Long useful;
+    private Long reviewId;
+    private String content;
+    private Boolean isPositive;
+    private Long userId;
+    private Long filmId;
+    private Long useful;
 }
