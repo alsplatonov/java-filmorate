@@ -112,8 +112,8 @@ public class FilmService {
             throw new ValidationException("count должен быть больше 0");
         }
 
-        // В базе реализованна сортировка и limit
-        List<Film> popularFilms = filmDbStorage.findAll();
+        // В базе реализованна сортировка и count
+        List<Film> popularFilms = filmDbStorage.getPopular(count, genreId, year);
 
         return popularFilms.stream()
                 .map(this::getFilmExtensions)
