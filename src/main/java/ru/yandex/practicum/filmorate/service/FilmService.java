@@ -11,6 +11,7 @@ import ru.yandex.practicum.filmorate.model.Director;
 import ru.yandex.practicum.filmorate.model.Film;
 import ru.yandex.practicum.filmorate.model.Genre;
 import ru.yandex.practicum.filmorate.model.MpaRating;
+
 import java.time.LocalDate;
 import java.util.*;
 import java.util.function.Function;
@@ -151,6 +152,38 @@ public class FilmService {
                 .toList();
     }
 
+    public Collection<FilmDto> getCommonFilms(Long userId, Long friendId) {
+        Collection<FilmDto> films = findAll();
+
+        // поллучаем множество фильмов которые лайкнул друг
+        Set<Long> friendLikedFilmsIds = films.stream()
+                .map(FilmDto::getId)
+                .filter(id -> likesDbStorage.isLiked(id, friendId))
+                .collect(Collectors.toSet());
+
+        // находим пересечения с множеством фильмов которые лайкнул юзер
+        Set<FilmDto> commonLikedFilms = films.stream()
+                .filter(film -> likesDbStorage.isLiked(film.getId(), userId))
+                .filter(film -> friendLikedFilmsIds.contains(film.getId()))
+                .collect(Collectors.toSet());
+
+        // возвращаем популярные фильмы, но мы отсеяли те, которые не входят в список общих лайкнутых фильмов
+        return getPopularFilms().stream()
+                .filter(commonLikedFilms::contains)
+                .collect(Collectors.toSet());
+    }
+
+    public FilmDto delete(Long filmId) {
+        if (filmId == null) {
+            throw new ValidationException("ID фильма не может быть null.");
+        }
+        filmDbStorage.findById(filmId)
+                .orElseThrow(() -> {
+                    throw new NotFoundException(String.format("Фильм с id %d не найден для удаления\n", filmId));
+                });
+        return FilmMapper.mapToFilmDto(filmDbStorage.delete(filmId));
+    }
+
     private void validateReleaseDate(Film film) {
         if (film.getReleaseDate() == null || film.getReleaseDate().isBefore(MIN_RELEASE_DATE)) {
             throw new ValidationException(
@@ -182,17 +215,6 @@ public class FilmService {
         return film;
     }
 
-    public FilmDto delete(Long filmId) {
-        if (filmId == null) {
-            throw new ValidationException("ID фильма не может быть null.");
-        }
-        filmDbStorage.findById(filmId)
-                .orElseThrow(() -> {
-                    throw new NotFoundException(String.format("Фильм с id %d не найден для удаления\n", filmId));
-                });
-        return FilmMapper.mapToFilmDto(filmDbStorage.delete(filmId));
-    }
-
     private <T, K> Set<T> resolveEntities(
             Set<K> ids,
             Function<Set<K>, Collection<T>> finder,
@@ -213,5 +235,24 @@ public class FilmService {
         }
 
         return entities;
+    }
+
+    private Collection<FilmDto> getPopularFilms() {
+        List<Film> films = filmDbStorage.findAll();
+
+        Map<Long, Integer> likesMap = likesDbStorage.getLikesCountForFilms(
+                films.stream()
+                        .map(Film::getId)
+                        .collect(Collectors.toList())
+        );
+
+        return films.stream()
+                .map(this::getFilmExtensions)
+                .sorted((f1, f2) -> Integer.compare(
+                        likesMap.getOrDefault(f2.getId(), 0),
+                        likesMap.getOrDefault(f1.getId(), 0)
+                ))
+                .map(FilmMapper::mapToFilmDto)
+                .collect(Collectors.toList());
     }
 }

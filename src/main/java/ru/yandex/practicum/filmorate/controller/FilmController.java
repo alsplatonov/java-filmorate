@@ -62,6 +62,12 @@ public class FilmController {
         return filmService.getPopularFilms(count);
     }
 
+    @GetMapping("/common")
+    public Collection<FilmDto> getCommonFilms(@RequestParam Long userId, @RequestParam Long friendId) {
+        log.info("Пользователь {} запросил общие фильмы с {}", userId, friendId);
+        return filmService.getCommonFilms(userId, friendId);
+    }
+
     @DeleteMapping("/{filmId}")
     @ResponseStatus(HttpStatus.NO_CONTENT)
     public FilmDto delete(@PathVariable Long filmId) {
