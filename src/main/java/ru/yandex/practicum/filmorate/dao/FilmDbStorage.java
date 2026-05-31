@@ -164,12 +164,12 @@ public class FilmDbStorage extends BaseRepository<Film> implements FilmStorage {
     public List<Film> getPopular(int limit, Long genreId, Long year) {
         StringBuilder sql = new StringBuilder(FIND_POPULAR_FILM);
 
-        //  Списки для хранения условий и параметров
+        // Списки для хранения условий и параметров
         List<String> conditions = new ArrayList<>();
         List<Object> parameters = new ArrayList<>();
 
         if (year != null) {
-            conditions.add("EXTRACT(YEAR FROM f.release_date) = ?");
+            conditions.add("YEAR(f.release_date) = ?");
             parameters.add(year);
         }
 
@@ -178,7 +178,7 @@ public class FilmDbStorage extends BaseRepository<Film> implements FilmStorage {
             parameters.add(genreId);
         }
 
-        //  Если есть хотя бы один фильтр, склеиваем их через AND и добавляем WHERE
+        // Если есть хотя бы один фильтр, склеиваем их через AND и добавляем WHERE
         if (!conditions.isEmpty()) {
             sql.append(" WHERE ");
             sql.append(String.join(" AND ", conditions));
