@@ -112,6 +112,7 @@ CREATE TABLE IF NOT EXISTS reviews (
                                        is_positive BOOLEAN NOT NULL,
                                        user_id BIGINT NOT NULL,
                                        film_id BIGINT NOT NULL,
+                                       useful BIGINT NOT NULL,
 
                                        CONSTRAINT fk_review_user FOREIGN KEY (user_id)
                                            REFERENCES users(id)
