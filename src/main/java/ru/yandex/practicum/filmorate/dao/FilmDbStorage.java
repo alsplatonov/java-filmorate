@@ -163,10 +163,10 @@ public class FilmDbStorage extends BaseRepository<Film> implements FilmStorage {
     public List<Film> getPopular(int limit, Long genreId, Long year) {
         StringBuilder sql = new StringBuilder(
                 "SELECT f.* " +
-                        "FROM films f" +
-                        "LEFT JOIN likes l ON f.id = l.film_id" +
-                        "LEFT JOIN mpa_ratings mr ON f.mpa_id = l.mr_id" +
-                        "LEFT JOIN film_genres fg ON f.id = l.film_id");
+                        "FROM films f " +
+                        "LEFT JOIN likes l ON f.id = l.film_id " +
+                        "LEFT JOIN mpa_ratings mr ON f.mpa_id = mr_id" +
+                        "LEFT JOIN film_genres fg ON f.id = fg.film_id");
 
         List<String> conditions = new ArrayList<>();
         List<Object> parameters = new ArrayList<>();
