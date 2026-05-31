@@ -8,7 +8,12 @@ import ru.yandex.practicum.filmorate.model.Director;
 import ru.yandex.practicum.filmorate.model.Film;
 import ru.yandex.practicum.filmorate.model.Genre;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.List;
+import java.util.Optional;
+import java.util.Set;
 
 @Repository("dbFilmStorage")
 public class FilmDbStorage extends BaseRepository<Film> implements FilmStorage {
@@ -37,12 +42,9 @@ public class FilmDbStorage extends BaseRepository<Film> implements FilmStorage {
                 )
             ORDER BY f.id
             """;
-    @Autowired
-    LikesStorage likesStorage;
-    @Autowired
-    UserStorage userStorage;
     private static final String DELETE_BY_ID_QUERY = "DELETE FROM films WHERE id = ?";
-    private static final String INSERT_FILM_DIRECTOR = "INSERT INTO film_directors (film_id, director_id) VALUES (?, ?)";
+    private static final String INSERT_FILM_DIRECTOR = "INSERT INTO film_directors (film_id, director_id)" +
+            " VALUES (?, ?)";
     private static final String GET_DIRECTORS_FILMS_SORTED_BY_LIKES =
             "SELECT f.*, COUNT(l.user_id) AS likes_count " +
                     "FROM films f " +
@@ -57,6 +59,12 @@ public class FilmDbStorage extends BaseRepository<Film> implements FilmStorage {
                     "JOIN film_directors fd ON f.id = fd.film_id " +
                     "WHERE fd.director_id = ? " +
                     "ORDER BY f.release_date";
+
+    @Autowired
+    LikesStorage likesStorage;
+
+    @Autowired
+    UserStorage userStorage;
 
     public FilmDbStorage(JdbcTemplate jdbc, RowMapper<Film> mapper) {
         super(jdbc, mapper);
@@ -168,6 +176,39 @@ public class FilmDbStorage extends BaseRepository<Film> implements FilmStorage {
                     ps.setLong(2, genre.getId());
                 }
         );
+    }
+
+    public List<Film> getPopular(int limit, Long genreId, Long year) {
+        StringBuilder sql = new StringBuilder(
+                "SELECT f.* " +
+                        "FROM films f " +
+                        "LEFT JOIN likes l ON f.id = l.film_id " +
+                        "LEFT JOIN mpa_ratings mr ON f.mpa_id = mr.id " +
+                        "LEFT JOIN film_genres fg ON f.id = fg.film_id "
+        );
+
+        List<String> conditions = new ArrayList<>();
+        List<Object> parameters = new ArrayList<>();
+
+        if (year != null) {
+            conditions.add("EXTRACT(YEAR FROM f.release_date) = ?");
+            parameters.add(year);
+        }
+
+        if (genreId != null) {
+            conditions.add("f.id IN (SELECT film_id FROM film_genres WHERE genre_id = ?)");
+            parameters.add(genreId);
+        }
+
+        // Собираем WHERE, если есть фильтры
+        if (!conditions.isEmpty()) {
+            sql.append(" WHERE ").append(String.join(" AND ", conditions));
+        }
+
+        sql.append(" ORDER BY (SELECT COUNT(*) FROM likes l WHERE l.film_id = f.id) DESC LIMIT ?");
+        parameters.add(limit);
+
+        return findMany(sql.toString(), parameters.toArray());
     }
 
     private void saveFilmDirectors(long filmId, Set<Director> directors) {
