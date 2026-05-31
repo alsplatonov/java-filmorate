@@ -57,11 +57,11 @@ public class FilmController {
         filmService.removeLike(id, userId);
     }
 
-    @GetMapping("/popular?count={limit}&genreId={genreId}&year={year}")
+    @GetMapping("/popular")
     public Collection<FilmDto> getPopularFilms(@RequestParam(defaultValue = "10") int count,
                                                 @RequestParam(required = false) Long genreId,
                                                 @RequestParam(required = false) Long year) {
-        return filmService.getPopularFilms(count, genreId, year);
+        return filmService.getPopular(count, genreId, year);
     }
 
     @DeleteMapping("/{filmId}")

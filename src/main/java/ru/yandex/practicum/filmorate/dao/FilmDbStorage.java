@@ -24,7 +24,6 @@ public class FilmDbStorage extends BaseRepository<Film> implements FilmStorage {
     private static final String UPDATE_QUERY = "UPDATE films SET name = ?, description = ?, release_date = ?, " +
             "duration = ? WHERE id = ?";
     private static final String INSERT_FILM_GENRE = "INSERT INTO film_genres (film_id, genre_id) VALUES (?, ?)";
-    private static final String FIND_POPULAR_FILM = "SELECT f.* FROM films f LEFT JOIN likes l ON f.id = l.film_id";
     private static final String FIND_RECOMMENDATIONS = """
             SELECT *
             FROM films f
@@ -162,7 +161,12 @@ public class FilmDbStorage extends BaseRepository<Film> implements FilmStorage {
     }
 
     public List<Film> getPopular(int limit, Long genreId, Long year) {
-        StringBuilder sql = new StringBuilder("SELECT f.* FROM films f");
+        StringBuilder sql = new StringBuilder(
+                "SELECT f.* " +
+                        "FROM films f" +
+                        "LEFT JOIN likes l ON f.id = l.film_id" +
+                        "LEFT JOIN mpa_ratings mr ON f.mpa_id = l.mr_id" +
+                        "LEFT JOIN film_genres fg ON f.id = l.film_id");
 
         List<String> conditions = new ArrayList<>();
         List<Object> parameters = new ArrayList<>();
