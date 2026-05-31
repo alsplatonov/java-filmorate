@@ -64,6 +64,12 @@ public class FilmController {
         return filmService.getPopular(count, genreId, year);
     }
 
+    @GetMapping("/common")
+    public Collection<FilmDto> getCommonFilms(@RequestParam Long userId, @RequestParam Long friendId) {
+        log.info("Пользователь {} запросил общие фильмы с {}", userId, friendId);
+        return filmService.getCommonFilms(userId, friendId);
+    }
+
     @DeleteMapping("/{filmId}")
     @ResponseStatus(HttpStatus.NO_CONTENT)
     public FilmDto delete(@PathVariable Long filmId) {
@@ -77,5 +83,15 @@ public class FilmController {
             @RequestParam(defaultValue = "year") String sortBy
     ) {
         return filmService.getFilmsByDirector(directorId, sortBy);
+    }
+
+    @GetMapping("/search")
+    public Collection<FilmDto> searchByTitleOrDirector(
+            @RequestParam String query,
+            @RequestParam String by
+    ) {
+        Collection<FilmDto> result = filmService.searchBy(query, by);
+        log.info("Поиск фильмов. query='{}', by='{}'. Найдено: {}", query, by, result.size());
+        return result;
     }
 }
