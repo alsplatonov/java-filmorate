@@ -22,14 +22,14 @@ public class ReviewController {
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
     public ReviewDto createReview(@Valid @RequestBody NewReviewRequest review) {
-        ReviewDto newReview = reviewService.createReview(review);
+        ReviewDto newReview = reviewService.create(review);
         log.info("Добавлен отзыв: {}", newReview);
         return newReview;
     }
 
     @PutMapping
     public ReviewDto updateReview(@Valid @RequestBody UpdateReviewRequest review) {
-        ReviewDto updatedReview = reviewService.updateReview(review);
+        ReviewDto updatedReview = reviewService.update(review);
         log.info("Обновлен отзыв: {}", updatedReview);
         return updatedReview;
     }
@@ -37,13 +37,13 @@ public class ReviewController {
     @DeleteMapping("/{id}")
     @ResponseStatus(HttpStatus.NO_CONTENT)
     public void deleteReview(@PathVariable Long id) {
-        reviewService.deleteReview(id);
+        reviewService.delete(id);
         log.info("Удален отзыв с id: {}", id);
     }
 
     @GetMapping("/{id}")
     public ReviewDto getReviewById(@PathVariable Long id) {
-        ReviewDto review = reviewService.getReviewById(id);
+        ReviewDto review = reviewService.findById(id);
         log.info("Получен отзыв с id: {}", id);
         return review;
     }
@@ -52,7 +52,7 @@ public class ReviewController {
     public List<ReviewDto> getReviews(
             @RequestParam(required = false) Long filmId,
             @RequestParam(defaultValue = "10") int count) {
-        List<ReviewDto> reviews = reviewService.getReviews(filmId, count);
+        List<ReviewDto> reviews = reviewService.findReviewsByFilmId(filmId, count);
         log.info("Получены отзывы для filmId: {}, count: {}", filmId, count);
         return reviews;
     }
