@@ -162,14 +162,13 @@ public class FilmDbStorage extends BaseRepository<Film> implements FilmStorage {
     }
 
     public List<Film> getPopular(int limit, Long genreId, Long year) {
-        StringBuilder sql = new StringBuilder(FIND_POPULAR_FILM);
+        StringBuilder sql = new StringBuilder("SELECT f.* FROM films f");
 
-        // Списки для хранения условий и параметров
         List<String> conditions = new ArrayList<>();
         List<Object> parameters = new ArrayList<>();
 
         if (year != null) {
-            conditions.add("YEAR(f.release_date) = ?");
+            conditions.add("EXTRACT(YEAR FROM f.release_date) = ?");
             parameters.add(year);
         }
 
@@ -178,13 +177,12 @@ public class FilmDbStorage extends BaseRepository<Film> implements FilmStorage {
             parameters.add(genreId);
         }
 
-        // Если есть хотя бы один фильтр, склеиваем их через AND и добавляем WHERE
+        // Собираем WHERE, если есть фильтры
         if (!conditions.isEmpty()) {
-            sql.append(" WHERE ");
-            sql.append(String.join(" AND ", conditions));
+            sql.append(" WHERE ").append(String.join(" AND ", conditions));
         }
 
-        sql.append(" GROUP BY f.id ORDER BY COUNT(l.user_id) DESC LIMIT ?");
+        sql.append(" ORDER BY (SELECT COUNT(*) FROM likes l WHERE l.film_id = f.id) DESC LIMIT ?");
         parameters.add(limit);
 
         return findMany(sql.toString(), parameters.toArray());
