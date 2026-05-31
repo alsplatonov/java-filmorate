@@ -91,6 +91,15 @@ public class FilmService {
                 .collect(Collectors.toList());
     }
 
+    public Collection<FilmDto> searchBy(String query, String by) {
+        System.out.println("searchBy: " + query);
+        List<Film> films = filmDbStorage.searchBy(query, by);
+        return films.stream()
+                .map(this::getFilmExtensions)
+                .map(FilmMapper::mapToFilmDto)
+                .collect(Collectors.toList());
+    }
+
     public FilmDto findById(Long id) {
         return filmDbStorage.findById(id)
                 .map(this::getFilmExtensions)
