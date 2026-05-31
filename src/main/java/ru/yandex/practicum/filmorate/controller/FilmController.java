@@ -58,10 +58,10 @@ public class FilmController {
     }
 
     @GetMapping("/popular?count={limit}&genreId={genreId}&year={year}")
-    public Collection<FilmDto> findPopularFilms(@RequestParam(defaultValue = "10") int limit,
+    public Collection<FilmDto> getPopularFilms(@RequestParam(defaultValue = "10") int limit,
                                                 @RequestParam(required = false) Long genreId,
                                                 @RequestParam(required = false) Long year) {
-        return filmService.getPopular(limit, genreId, year);
+        return filmService.getPopularFilms(limit, genreId, year);
     }
 
     @DeleteMapping("/{filmId}")
