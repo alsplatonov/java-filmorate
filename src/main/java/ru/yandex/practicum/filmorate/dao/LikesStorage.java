@@ -8,4 +8,6 @@ public interface LikesStorage {
     int getLikesCount(long filmId);
 
     boolean isLiked(long filmId, long userId);
+
+    boolean hasLikes(Long userId);
 }

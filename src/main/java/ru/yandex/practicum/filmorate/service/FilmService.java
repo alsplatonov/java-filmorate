@@ -140,13 +140,19 @@ public class FilmService {
                 .collect(Collectors.toList());
     }
 
+    public List<FilmDto> findRecommendationFilms(Long userId) {
+        return filmDbStorage.findRecommendations(userId).stream()
+                .map(FilmMapper::mapToFilmDto)
+                .collect(Collectors.toList());
+    }
+
     public List<FilmDto> getFilmsByDirector(Long directorId, String sortBy) {
 
         // проверка, что режиссёр существует
         Director director = directorDbStorage.findById(directorId)
                 .orElseThrow(() -> new NotFoundException("Режиссёр не найден"));
 
-        List<Film> films = filmDbStorage.getFilmsByDirector(directorId, sortBy);
+        List<Film> films = filmDbStorage.getFilmsByDirector(director.getId(), sortBy);
 
         return films.stream()
                 .map(this::getFilmExtensions)
@@ -183,6 +189,17 @@ public class FilmService {
             }
         }
         return film;
+    }
+
+    public FilmDto delete(Long filmId) {
+        if (filmId == null) {
+            throw new ValidationException("ID фильма не может быть null.");
+        }
+        filmDbStorage.findById(filmId)
+                .orElseThrow(() -> {
+                    throw new NotFoundException(String.format("Фильм с id %d не найден для удаления\n", filmId));
+                });
+        return FilmMapper.mapToFilmDto(filmDbStorage.delete(filmId));
     }
 
     private <T, K> Set<T> resolveEntities(

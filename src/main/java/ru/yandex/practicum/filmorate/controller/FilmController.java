@@ -35,6 +35,7 @@ public class FilmController {
     }
 
     @GetMapping
+    @ResponseStatus(HttpStatus.OK)
     public Collection<FilmDto> findAll() {
         return filmService.findAll();
     }
@@ -59,6 +60,13 @@ public class FilmController {
     @GetMapping("/popular")
     public Collection<FilmDto> findPopularFilms(@RequestParam(defaultValue = "10") int count) {
         return filmService.getPopularFilms(count);
+    }
+
+    @DeleteMapping("/{filmId}")
+    @ResponseStatus(HttpStatus.NO_CONTENT)
+    public FilmDto delete(@PathVariable Long filmId) {
+        log.info("Удаление фильма с id {}", filmId);
+        return filmService.delete(filmId);
     }
 
     @GetMapping("/director/{directorId}")
