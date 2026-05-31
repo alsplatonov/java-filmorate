@@ -107,8 +107,8 @@ public class FilmService {
         likesDbStorage.removeLike(filmId, userId);
     }
 
-    public Collection<FilmDto> getPopularFilms(int limit, Long genreId, Long year) {
-        if (limit <= 0) {
+    public Collection<FilmDto> getPopularFilms(int count, Long genreId, Long year) {
+        if (count <= 0) {
             throw new ValidationException("count должен быть больше 0");
         }
 
