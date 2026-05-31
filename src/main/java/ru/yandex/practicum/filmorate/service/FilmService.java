@@ -113,7 +113,7 @@ public class FilmService {
         }
 
         // В базе реализованна сортировка и limit
-        List<Film> popularFilms = filmDbStorage.getPopular(limit, genreId, year);
+        List<Film> popularFilms = filmDbStorage.findAll();
 
         return popularFilms.stream()
                 .map(this::getFilmExtensions)
