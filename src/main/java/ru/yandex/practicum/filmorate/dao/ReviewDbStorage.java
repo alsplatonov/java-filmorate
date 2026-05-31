@@ -10,17 +10,17 @@ import java.util.Optional;
 
 @Repository
 public class ReviewDbStorage extends BaseRepository<Review> implements ReviewStorage {
-    private static final String INSERT_QUERY = "INSERT INTO reviews(content, is_positive, user_id, film_id) VALUES (?, ?, ?, ?)";
+    private static final String INSERT_QUERY = "INSERT INTO reviews(content, is_positive, user_id, film_id, useful) VALUES (?, ?, ?, ?, ?)";
 
     private static final String FIND_BY_ID_QUERY = "SELECT * FROM reviews WHERE id = ?";
 
-    private static final String UPDATE_QUERY = "UPDATE reviews SET id = ?, content = ?, is_positive = ?, user_id = ?, film_id = ? WHERE id = ?";
+    private static final String UPDATE_QUERY = "UPDATE reviews SET content = ?, is_positive = ?, user_id = ?, film_id = ?, useful = ? WHERE id = ?";
 
     private static final String DELETE_QUERY = "DELETE FROM reviews WHERE id = ?";
 
-    private static final String FIND_REVIEWS_BY_FILM_ID = "SELECT * FROM reviews WHERE film_id = ? LIMIT count";
+    private static final String FIND_REVIEWS_BY_FILM_ID = "SELECT * FROM reviews WHERE film_id = ? LIMIT ?";
 
-    private static final String FIND_REVIEWS_WITHOUT_FILM_ID = "SELECT * FROM reviews";
+    private static final String FIND_REVIEWS_WITHOUT_FILM_ID = "SELECT * FROM reviews LIMIT ?";
 
     public ReviewDbStorage(JdbcTemplate jdbc, RowMapper<Review> mapper) {
         super(jdbc, mapper);
@@ -33,7 +33,8 @@ public class ReviewDbStorage extends BaseRepository<Review> implements ReviewSto
                 review.getContent(),
                 review.getIsPositive(),
                 review.getUserId(),
-                review.getFilmId()
+                review.getFilmId(),
+                review.getUseful()
         );
         review.setReviewId(id);
         return review;
@@ -48,11 +49,12 @@ public class ReviewDbStorage extends BaseRepository<Review> implements ReviewSto
     public Review update(Review review) {
         update(
                 UPDATE_QUERY,
-                review.getReviewId(),
                 review.getContent(),
                 review.getIsPositive(),
                 review.getUserId(),
-                review.getFilmId()
+                review.getFilmId(),
+                review.getUseful(),
+                review.getReviewId()
         );
         return review;
     }

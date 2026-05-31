@@ -21,12 +21,24 @@ public class ReviewService {
     private final ReviewLikesDbStorage reviewLikesDbStorage;
 
     public ReviewDto create(NewReviewRequest requestReview) {
+        if (requestReview.getFilmId() == null || requestReview.getFilmId() <= 0) {
+            throw new NotFoundException("Id фильма должно быть положительным числом");
+        }
+        if (requestReview.getUserId() == null || requestReview.getUserId() <= 0) {
+            throw new NotFoundException("Id пользователя должно быть положительным числом");
+        }
         Review review = ReviewMapper.mapToReview(requestReview);
         review = reviewDbStorage.create(review);
         return ReviewMapper.mapToReviewDto(review);
     }
 
     public ReviewDto update(UpdateReviewRequest requestReview) {
+        if (requestReview.getFilmId() == null || requestReview.getFilmId() <= 0) {
+            throw new NotFoundException("Id фильма должно быть положительным числом");
+        }
+        if (requestReview.getUserId() == null || requestReview.getUserId() <= 0) {
+            throw new NotFoundException("Id пользователя должно быть положительным числом");
+        }
         Review updateReview = reviewDbStorage.findById(requestReview.getReviewId())
                 .map(review -> ReviewMapper.updateReviewFields(review, requestReview))
                 .orElseThrow(() -> new NotFoundException("Отзыв не найден"));

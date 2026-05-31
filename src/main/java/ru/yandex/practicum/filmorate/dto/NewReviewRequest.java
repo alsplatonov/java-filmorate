@@ -2,7 +2,6 @@ package ru.yandex.practicum.filmorate.dto;
 
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
-import jakarta.validation.constraints.Positive;
 import lombok.Data;
 
 @Data
@@ -18,8 +17,4 @@ public class NewReviewRequest {
 
     @NotNull(message = "Id фильма обязательно")
     Long filmId;
-
-    @NotNull(message = "Оценка полезности обязательна")
-    @Positive(message = "Оценка должна быть положительной")
-    Long useful;
 }

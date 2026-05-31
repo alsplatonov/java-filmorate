@@ -12,29 +12,7 @@ public class ReviewMapper {
     public static Review mapToReview(NewReviewRequest requestReview) {
         Review review = new Review();
         review.setContent(requestReview.getContent());
-        review.setUseful(requestReview.getUseful());
-        review.setFilmId(requestReview.getFilmId());
-        review.setUserId(requestReview.getUserId());
-        review.setIsPositive(requestReview.getIsPositive());
-        return review;
-    }
-
-    public static Review mapToReview(UpdateReviewRequest requestReview) {
-        Review review = new Review();
-        review.setReviewId(requestReview.getReviewId());
-        review.setContent(requestReview.getContent());
-        review.setUseful(requestReview.getUseful());
-        review.setFilmId(requestReview.getFilmId());
-        review.setUserId(requestReview.getUserId());
-        review.setIsPositive(requestReview.getIsPositive());
-        return review;
-    }
-
-    public static Review mapToReview(ReviewDto requestReview) {
-        Review review = new Review();
-        review.setReviewId(requestReview.getReviewId());
-        review.setContent(requestReview.getContent());
-        review.setUseful(requestReview.getUseful());
+        review.setUseful(0L);
         review.setFilmId(requestReview.getFilmId());
         review.setUserId(requestReview.getUserId());
         review.setIsPositive(requestReview.getIsPositive());
@@ -56,7 +34,6 @@ public class ReviewMapper {
         review.setReviewId(requestReview.getReviewId());
         review.setContent(requestReview.getContent());
         review.setIsPositive(requestReview.getIsPositive());
-        review.setUseful(requestReview.getUseful());
         review.setFilmId(requestReview.getFilmId());
         review.setUserId(requestReview.getUserId());
         return review;
