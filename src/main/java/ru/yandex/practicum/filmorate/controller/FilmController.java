@@ -74,6 +74,8 @@ public class FilmController {
             @RequestParam String query,
             @RequestParam String by
     ) {
-        return filmService.searchBy(query, by);
+        Collection<FilmDto> result = filmService.searchBy(query, by);
+        log.info("Поиск фильмов. query='{}', by='{}'. Найдено: {}", query, by, result.size());
+        return result;
     }
 }
