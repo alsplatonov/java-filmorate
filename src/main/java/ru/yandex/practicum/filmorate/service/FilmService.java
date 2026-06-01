@@ -7,10 +7,7 @@ import ru.yandex.practicum.filmorate.dto.*;
 import ru.yandex.practicum.filmorate.exception.NotFoundException;
 import ru.yandex.practicum.filmorate.exception.ValidationException;
 import ru.yandex.practicum.filmorate.mapper.FilmMapper;
-import ru.yandex.practicum.filmorate.model.Director;
-import ru.yandex.practicum.filmorate.model.Film;
-import ru.yandex.practicum.filmorate.model.Genre;
-import ru.yandex.practicum.filmorate.model.MpaRating;
+import ru.yandex.practicum.filmorate.model.*;
 
 import java.time.LocalDate;
 import java.util.*;
@@ -27,6 +24,7 @@ public class FilmService {
 
     private static final LocalDate MIN_RELEASE_DATE = LocalDate.of(1895, 12, 28);
     private final DirectorDbStorage directorDbStorage;
+    private final EventStorage eventStorage;
 
     public FilmDto create(NewFilmRequest request) {
         Film film = FilmMapper.mapToFilm(request);
@@ -102,10 +100,30 @@ public class FilmService {
         if (!likesDbStorage.isLiked(filmId, userId)) {
             likesDbStorage.addLike(filmId, userId);
         }
+
+        Event event = Event.builder()
+                .timestamp(System.currentTimeMillis())
+                .userId(userId)
+                .eventType(EventType.LIKE)
+                .operation(Operation.ADD)
+                .entityId(filmId)
+                .build();
+
+        eventStorage.create(event);
     }
 
     public void removeLike(Long filmId, Long userId) {
         likesDbStorage.removeLike(filmId, userId);
+
+        Event event = Event.builder()
+                .timestamp(System.currentTimeMillis())
+                .userId(userId)
+                .eventType(EventType.LIKE)
+                .operation(Operation.REMOVE)
+                .entityId(filmId)
+                .build();
+
+        eventStorage.create(event);
     }
 
     public Collection<FilmDto> getPopularFilms(int count) {

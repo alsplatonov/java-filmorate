@@ -9,6 +9,7 @@ import ru.yandex.practicum.filmorate.dto.FilmDto;
 import ru.yandex.practicum.filmorate.dto.NewUserRequest;
 import ru.yandex.practicum.filmorate.dto.UpdateUserRequest;
 import ru.yandex.practicum.filmorate.dto.UserDto;
+import ru.yandex.practicum.filmorate.model.Event;
 import ru.yandex.practicum.filmorate.service.FilmService;
 import ru.yandex.practicum.filmorate.service.UserService;
 import java.util.Collection;
@@ -79,6 +80,11 @@ public class UserController {
     public UserDto delete(@PathVariable Long userId) {
         log.info("Удаление пользователя с id {}", userId);
         return userService.delete(userId);
+    }
+
+    @GetMapping("/{id}/feed")
+    public List<Event> eventFeed(@PathVariable Long id) {
+        return userService.getFeed(id);
     }
 
 }
