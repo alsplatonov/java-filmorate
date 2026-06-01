@@ -89,6 +89,15 @@ public class FilmService {
                 .collect(Collectors.toList());
     }
 
+    public Collection<FilmDto> searchBy(String query, String by) {
+        System.out.println("searchBy: " + query);
+        List<Film> films = filmDbStorage.searchBy(query, by);
+        return films.stream()
+                .map(this::getFilmExtensions)
+                .map(FilmMapper::mapToFilmDto)
+                .collect(Collectors.toList());
+    }
+
     public FilmDto findById(Long id) {
         return filmDbStorage.findById(id)
                 .map(this::getFilmExtensions)
@@ -124,26 +133,16 @@ public class FilmService {
         eventStorage.create(event);
     }
 
-    public Collection<FilmDto> getPopularFilms(int count) {
+    public Collection<FilmDto> getPopular(int count, Long genreId, Long year) {
         if (count <= 0) {
             throw new ValidationException("count должен быть больше 0");
         }
 
-        List<Film> films = filmDbStorage.findAll();
+        // В базе реализованна сортировка и count
+        List<Film> popularFilms = filmDbStorage.getPopular(count, genreId, year);
 
-        Map<Long, Integer> likesMap = likesDbStorage.getLikesCountForFilms(
-                films.stream()
-                        .map(Film::getId)
-                        .collect(Collectors.toList())
-        );
-
-        return films.stream()
+        return popularFilms.stream()
                 .map(this::getFilmExtensions)
-                .sorted((f1, f2) -> Integer.compare(
-                        likesMap.getOrDefault(f2.getId(), 0),
-                        likesMap.getOrDefault(f1.getId(), 0)
-                ))
-                .limit(count)
                 .map(FilmMapper::mapToFilmDto)
                 .collect(Collectors.toList());
     }
