@@ -101,13 +101,12 @@ public class FilmService {
             likesDbStorage.addLike(filmId, userId);
         }
 
-        Event event = Event.builder()
-                .timestamp(System.currentTimeMillis())
-                .userId(userId)
-                .eventType(EventType.LIKE)
-                .operation(Operation.ADD)
-                .entityId(filmId)
-                .build();
+        Event event = new Event();
+        event.setTimestamp(System.currentTimeMillis());
+        event.setUserId(userId);
+        event.setEventType(EventType.LIKE);
+        event.setOperation(Operation.ADD);
+        event.setEntityId(filmId);
 
         eventStorage.create(event);
     }
@@ -115,13 +114,12 @@ public class FilmService {
     public void removeLike(Long filmId, Long userId) {
         likesDbStorage.removeLike(filmId, userId);
 
-        Event event = Event.builder()
-                .timestamp(System.currentTimeMillis())
-                .userId(userId)
-                .eventType(EventType.LIKE)
-                .operation(Operation.REMOVE)
-                .entityId(filmId)
-                .build();
+        Event event = new Event();
+        event.setTimestamp(System.currentTimeMillis());
+        event.setUserId(userId);
+        event.setEventType(EventType.LIKE);
+        event.setOperation(Operation.REMOVE);
+        event.setEntityId(filmId);
 
         eventStorage.create(event);
     }

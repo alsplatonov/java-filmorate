@@ -61,13 +61,12 @@ public class UserService {
 
         friendsDbStorage.addFriend(userId, friendId);
 
-        Event event = Event.builder()
-                .timestamp(System.currentTimeMillis())
-                .userId(userId)
-                .eventType(EventType.FRIEND)
-                .operation(Operation.ADD)
-                .entityId(friendId)
-                .build();
+        Event event = new Event();
+        event.setTimestamp(System.currentTimeMillis());
+        event.setUserId(userId);
+        event.setEventType(EventType.FRIEND);
+        event.setOperation(Operation.ADD);
+        event.setEntityId(friendId);
 
         eventStorage.create(event);
     }
@@ -81,13 +80,12 @@ public class UserService {
 
         friendsDbStorage.removeFriend(userId, friendId);
 
-        Event event = Event.builder()
-                .timestamp(System.currentTimeMillis())
-                .userId(userId)
-                .eventType(EventType.FRIEND)
-                .operation(Operation.REMOVE)
-                .entityId(friendId)
-                .build();
+        Event event = new Event();
+        event.setTimestamp(System.currentTimeMillis());
+        event.setUserId(userId);
+        event.setEventType(EventType.FRIEND);
+        event.setOperation(Operation.REMOVE);
+        event.setEntityId(friendId);
 
         eventStorage.create(event);
     }
