@@ -2,6 +2,7 @@ package ru.yandex.practicum.filmorate.service;
 
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
+import ru.yandex.practicum.filmorate.dao.EventStorage;
 import ru.yandex.practicum.filmorate.dao.FriendsDbStorage;
 import ru.yandex.practicum.filmorate.dao.UserDbStorage;
 import ru.yandex.practicum.filmorate.dto.NewUserRequest;
@@ -10,6 +11,9 @@ import ru.yandex.practicum.filmorate.dto.UserDto;
 import ru.yandex.practicum.filmorate.exception.NotFoundException;
 import ru.yandex.practicum.filmorate.exception.ValidationException;
 import ru.yandex.practicum.filmorate.mapper.UserMapper;
+import ru.yandex.practicum.filmorate.model.Event;
+import ru.yandex.practicum.filmorate.model.EventType;
+import ru.yandex.practicum.filmorate.model.Operation;
 import ru.yandex.practicum.filmorate.model.User;
 import java.util.*;
 import java.util.stream.Collectors;
@@ -19,6 +23,7 @@ import java.util.stream.Collectors;
 public class UserService {
     private final UserDbStorage userDbStorage;
     private final FriendsDbStorage friendsDbStorage;
+    private final EventStorage eventStorage;
 
     public UserDto create(NewUserRequest request) {
         User user = UserMapper.mapToUser(request);
@@ -55,6 +60,15 @@ public class UserService {
                 .orElseThrow(() -> new NotFoundException("Друг не найден"));
 
         friendsDbStorage.addFriend(userId, friendId);
+
+        Event event = new Event();
+        event.setTimestamp(System.currentTimeMillis());
+        event.setUserId(userId);
+        event.setEventType(EventType.FRIEND);
+        event.setOperation(Operation.ADD);
+        event.setEntityId(friendId);
+
+        eventStorage.create(event);
     }
 
     public void removeFriend(Long userId, Long friendId) {
@@ -65,6 +79,15 @@ public class UserService {
                 .orElseThrow(() -> new NotFoundException("Друг не найден"));
 
         friendsDbStorage.removeFriend(userId, friendId);
+
+        Event event = new Event();
+        event.setTimestamp(System.currentTimeMillis());
+        event.setUserId(userId);
+        event.setEventType(EventType.FRIEND);
+        event.setOperation(Operation.REMOVE);
+        event.setEntityId(friendId);
+
+        eventStorage.create(event);
     }
 
     //список объектов друзей, а не id
@@ -101,6 +124,13 @@ public class UserService {
                     throw new NotFoundException(String.format("Пользователь с id %d не найден для удаления.\n", userId));
                 });
         return UserMapper.mapToUserDto(userDbStorage.delete(userId));
+    }
+
+    public List<Event> getFeed(Long userId) {
+        userDbStorage.findById(userId)
+                .orElseThrow(() -> new NotFoundException("Пользователь с ID " + userId + " не найден"));
+
+        return eventStorage.getAll(userId);
     }
 
 }

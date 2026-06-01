@@ -2,6 +2,7 @@ package ru.yandex.practicum.filmorate.service;
 
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
+import ru.yandex.practicum.filmorate.dao.EventStorage;
 import ru.yandex.practicum.filmorate.dao.ReviewDbStorage;
 import ru.yandex.practicum.filmorate.dao.ReviewLikesDbStorage;
 import ru.yandex.practicum.filmorate.dto.NewReviewRequest;
@@ -9,6 +10,9 @@ import ru.yandex.practicum.filmorate.dto.ReviewDto;
 import ru.yandex.practicum.filmorate.dto.UpdateReviewRequest;
 import ru.yandex.practicum.filmorate.exception.NotFoundException;
 import ru.yandex.practicum.filmorate.mapper.ReviewMapper;
+import ru.yandex.practicum.filmorate.model.Event;
+import ru.yandex.practicum.filmorate.model.EventType;
+import ru.yandex.practicum.filmorate.model.Operation;
 import ru.yandex.practicum.filmorate.model.Review;
 
 import java.util.List;
@@ -19,6 +23,7 @@ import java.util.stream.Collectors;
 public class ReviewService {
     private final ReviewDbStorage reviewDbStorage;
     private final ReviewLikesDbStorage reviewLikesDbStorage;
+    private final EventStorage eventStorage;
 
     public ReviewDto create(NewReviewRequest requestReview) {
         if (requestReview.getFilmId() == null || requestReview.getFilmId() <= 0) {
@@ -29,6 +34,15 @@ public class ReviewService {
         }
         Review review = ReviewMapper.mapToReview(requestReview);
         review = reviewDbStorage.create(review);
+
+        Event event = new Event();
+        event.setTimestamp(System.currentTimeMillis());
+        event.setUserId(review.getUserId());
+        event.setEventType(EventType.REVIEW);
+        event.setOperation(Operation.ADD);
+        event.setEntityId(review.getReviewId());
+        eventStorage.create(event);
+
         return ReviewMapper.mapToReviewDto(review);
     }
 
@@ -43,11 +57,32 @@ public class ReviewService {
                 .map(review -> ReviewMapper.updateReviewFields(review, requestReview))
                 .orElseThrow(() -> new NotFoundException("Отзыв не найден"));
         updateReview = reviewDbStorage.update(updateReview);
+
+        Event event = new Event();
+        event.setTimestamp(System.currentTimeMillis());
+        event.setUserId(updateReview.getUserId());
+        event.setEventType(EventType.REVIEW);
+        event.setOperation(Operation.UPDATE);
+        event.setEntityId(updateReview.getReviewId());
+        eventStorage.create(event);
+
         return ReviewMapper.mapToReviewDto(updateReview);
     }
 
     public void delete(Long id) {
+        Review review = reviewDbStorage.findById(id)
+                .orElseThrow(() -> new NotFoundException("Отзыв не найден с ID: " + id));
+
         reviewDbStorage.removeReview(id);
+
+        Event event = new Event();
+        event.setTimestamp(System.currentTimeMillis());
+        event.setUserId(review.getUserId());
+        event.setEventType(EventType.REVIEW);
+        event.setOperation(Operation.REMOVE);
+        event.setEntityId(id);
+        eventStorage.create(event);
+
     }
 
     public ReviewDto findById(Long id) {
