@@ -46,7 +46,7 @@ class FilmDbStorageTest {
         Director director = directorStorage.create(createDirector("Nolan"));
 
         Film film = createFilm("Film 1");
-        film.setDirector(Set.of(director));
+        film.setDirectors(Set.of(director));
 
         Film created = filmStorage.create(film);
 
@@ -89,11 +89,11 @@ class FilmDbStorageTest {
 
         Film f1 = createFilm("F1");
         f1.setReleaseDate(LocalDate.of(2001, 1, 1));
-        f1.setDirector(Set.of(director));
+        f1.setDirectors(Set.of(director));
 
         Film f2 = createFilm("F2");
         f2.setReleaseDate(LocalDate.of(1999, 1, 1));
-        f2.setDirector(Set.of(director));
+        f2.setDirectors(Set.of(director));
 
         filmStorage.create(f1);
         filmStorage.create(f2);
@@ -114,11 +114,11 @@ class FilmDbStorageTest {
         User u3 = userStorage.create(createUser("u3"));
 
         Film f1 = createFilm("F1");
-        f1.setDirector(Set.of(director));
+        f1.setDirectors(Set.of(director));
         f1 = filmStorage.create(f1);
 
         Film f2 = createFilm("F2");
-        f2.setDirector(Set.of(director));
+        f2.setDirectors(Set.of(director));
         f2 = filmStorage.create(f2);
 
         // имитируем лайки
@@ -150,7 +150,7 @@ class FilmDbStorageTest {
         Director director = directorStorage.create(createDirector("Nolan"));
 
         Film film = createFilm("Interstellar");
-        film.setDirector(Set.of(director));
+        film.setDirectors(Set.of(director));
         filmStorage.create(film);
 
         List<Film> result = filmStorage.searchBy("Nol", "director");
@@ -166,7 +166,7 @@ class FilmDbStorageTest {
         Director director = directorStorage.create(createDirector("Nolan"));
 
         Film film1 = createFilm("Matrix");
-        film1.setDirector(Set.of(director));
+        film1.setDirectors(Set.of(director));
         filmStorage.create(film1);
 
         Film film2 = createFilm("Avatar");
