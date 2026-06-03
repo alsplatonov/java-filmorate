@@ -5,9 +5,9 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
-import ru.yandex.practicum.filmorate.dto.NewReviewRequest;
-import ru.yandex.practicum.filmorate.dto.ReviewDto;
-import ru.yandex.practicum.filmorate.dto.UpdateReviewRequest;
+import ru.yandex.practicum.filmorate.dto.review.NewReviewRequest;
+import ru.yandex.practicum.filmorate.dto.review.ReviewDto;
+import ru.yandex.practicum.filmorate.dto.review.UpdateReviewRequest;
 import ru.yandex.practicum.filmorate.service.ReviewService;
 
 import java.util.List;
@@ -51,7 +51,7 @@ public class ReviewController {
     @GetMapping
     public List<ReviewDto> getReviews(
             @RequestParam(required = false) Long filmId,
-            @RequestParam(defaultValue = "10") int count) {
+            @RequestParam(required = false, defaultValue = "10") int count) {
         List<ReviewDto> reviews = reviewService.findReviewsByFilmId(filmId, count);
         log.info("Получены отзывы для filmId: {}, count: {}", filmId, count);
         return reviews;

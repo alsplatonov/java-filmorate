@@ -42,7 +42,7 @@ INSERT INTO films(name, description, release_date, duration, mpa_id) values
 ('Mprpkn6rKSgRARY','EUnHlaEF3PtL3aDRtQ4MA2ufhJGeNoeKoEcHIh18CdAW0IkemJ','1962-08-09',
  '138','2');
 */
-
+/*
 --DIRECTORS
 INSERT INTO directors (name)
 SELECT 'sdfcvngm' WHERE NOT EXISTS (SELECT 1 FROM genres WHERE name='sdfcvngm');
@@ -61,3 +61,4 @@ SELECT 'ffjfgkghk' WHERE NOT EXISTS (SELECT 1 FROM genres WHERE name='ffjfgkghk'
 
 INSERT INTO directors (name)
 SELECT 'hgkhjlkhj' WHERE NOT EXISTS (SELECT 1 FROM genres WHERE name='hgkhjlkhj');
+ */

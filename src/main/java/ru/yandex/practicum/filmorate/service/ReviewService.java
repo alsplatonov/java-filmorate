@@ -1,24 +1,28 @@
 package ru.yandex.practicum.filmorate.service;
 
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
-import ru.yandex.practicum.filmorate.dao.EventStorage;
-import ru.yandex.practicum.filmorate.dao.ReviewDbStorage;
-import ru.yandex.practicum.filmorate.dao.ReviewLikesDbStorage;
-import ru.yandex.practicum.filmorate.dto.NewReviewRequest;
-import ru.yandex.practicum.filmorate.dto.ReviewDto;
-import ru.yandex.practicum.filmorate.dto.UpdateReviewRequest;
+import ru.yandex.practicum.filmorate.dao.event.EventStorage;
+import ru.yandex.practicum.filmorate.dao.review.ReviewDbStorage;
+import ru.yandex.practicum.filmorate.dao.review.ReviewLikesDbStorage;
+import ru.yandex.practicum.filmorate.dto.review.NewReviewRequest;
+import ru.yandex.practicum.filmorate.dto.review.ReviewDto;
+import ru.yandex.practicum.filmorate.dto.review.UpdateReviewRequest;
 import ru.yandex.practicum.filmorate.exception.NotFoundException;
+import ru.yandex.practicum.filmorate.exception.ValidationException;
 import ru.yandex.practicum.filmorate.mapper.ReviewMapper;
 import ru.yandex.practicum.filmorate.model.Event;
 import ru.yandex.practicum.filmorate.model.EventType;
 import ru.yandex.practicum.filmorate.model.Operation;
 import ru.yandex.practicum.filmorate.model.Review;
 
+import java.util.Collections;
 import java.util.List;
 import java.util.stream.Collectors;
 
 @Service
+@Slf4j
 @RequiredArgsConstructor
 public class ReviewService {
     private final ReviewDbStorage reviewDbStorage;
@@ -92,6 +96,12 @@ public class ReviewService {
     }
 
     public List<ReviewDto> findReviewsByFilmId(Long filmId, int count) {
+        if (count <= 0) {
+            throw new ValidationException("Число отзывов должно быть положительным");
+        }
+        if (filmId == null) {
+            return Collections.emptyList();
+        }
         return reviewDbStorage.findReviewsByFilmId(filmId, count).stream()
                 .map(ReviewMapper::mapToReviewDto)
                 .collect(Collectors.toList());

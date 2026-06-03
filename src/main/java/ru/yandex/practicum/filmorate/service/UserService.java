@@ -1,13 +1,14 @@
 package ru.yandex.practicum.filmorate.service;
 
 import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
-import ru.yandex.practicum.filmorate.dao.EventStorage;
-import ru.yandex.practicum.filmorate.dao.FriendsDbStorage;
-import ru.yandex.practicum.filmorate.dao.UserDbStorage;
-import ru.yandex.practicum.filmorate.dto.NewUserRequest;
-import ru.yandex.practicum.filmorate.dto.UpdateUserRequest;
-import ru.yandex.practicum.filmorate.dto.UserDto;
+import ru.yandex.practicum.filmorate.dao.event.EventStorage;
+import ru.yandex.practicum.filmorate.dao.friends.FriendsDbStorage;
+import ru.yandex.practicum.filmorate.dao.users.UserDbStorage;
+import ru.yandex.practicum.filmorate.dto.user.NewUserRequest;
+import ru.yandex.practicum.filmorate.dto.user.UpdateUserRequest;
+import ru.yandex.practicum.filmorate.dto.user.UserDto;
 import ru.yandex.practicum.filmorate.exception.NotFoundException;
 import ru.yandex.practicum.filmorate.exception.ValidationException;
 import ru.yandex.practicum.filmorate.mapper.UserMapper;
@@ -21,7 +22,9 @@ import java.util.stream.Collectors;
 @Service
 @RequiredArgsConstructor
 public class UserService {
+    @Autowired
     private final UserDbStorage userDbStorage;
+    @Autowired
     private final FriendsDbStorage friendsDbStorage;
     private final EventStorage eventStorage;
 
@@ -47,12 +50,18 @@ public class UserService {
     }
 
     public UserDto findById(Long id) {
+        if (id == null) {
+            throw new ValidationException("id пользователя не может быть null");
+        }
         return userDbStorage.findById(id)
                 .map(UserMapper::mapToUserDto)
                 .orElseThrow(() -> new NotFoundException("Пользователь не найден с ID: " + id));
     }
 
     public void addFriend(Long userId, Long friendId) {
+        if (userId == null || friendId == null) {
+            throw new ValidationException("id пользователя или друга не может быть null");
+        }
         userDbStorage.findById(userId)
                 .orElseThrow(() -> new NotFoundException("Пользователь не найден"));
 
@@ -72,6 +81,9 @@ public class UserService {
     }
 
     public void removeFriend(Long userId, Long friendId) {
+        if (userId == null || friendId == null) {
+            throw new ValidationException("id пользователя или друга не может быть null");
+        }
         userDbStorage.findById(userId)
                 .orElseThrow(() -> new NotFoundException("Пользователь не найден"));
 
@@ -91,18 +103,23 @@ public class UserService {
     }
 
     //список объектов друзей, а не id
-    public Set<UserDto> getUserFriends(Long userId) {
+    public List<UserDto> getUserFriends(Long userId) {
+        if (userId == null) {
+            throw new ValidationException("id пользователя не может быть null");
+        }
         userDbStorage.findById(userId)
                 .orElseThrow(() -> new NotFoundException("Пользователь не найден"));
 
         return friendsDbStorage.getFriends(userId).stream()
                 .map(UserMapper::mapToUserDto)
-                .collect(Collectors.toSet());
+                .collect(Collectors.toList());
     }
 
     //список общих друзей двух юзеров
     public Set<UserDto> getCommonFriends(Long firstUserId, Long secondUserId) {
-
+        if (firstUserId == null || secondUserId == null) {
+            throw new ValidationException("id полльзователей не может быть null");
+        }
         userDbStorage.findById(firstUserId)
                 .orElseThrow(() -> new NotFoundException("Пользователь не найден"));
 

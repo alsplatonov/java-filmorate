@@ -6,7 +6,7 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.jdbc.core.JdbcTemplate;
-import ru.yandex.practicum.filmorate.dao.DirectorDbStorage;
+import ru.yandex.practicum.filmorate.dao.directors.DirectorDbStorage;
 import ru.yandex.practicum.filmorate.model.Director;
 import java.util.List;
 import java.util.Set;

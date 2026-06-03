@@ -2,8 +2,18 @@ package ru.yandex.practicum.filmorate.service;
 
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
-import ru.yandex.practicum.filmorate.dao.*;
-import ru.yandex.practicum.filmorate.dto.*;
+import ru.yandex.practicum.filmorate.dao.event.EventStorage;
+import ru.yandex.practicum.filmorate.dao.directors.DirectorDbStorage;
+import ru.yandex.practicum.filmorate.dao.films.FilmDbStorage;
+import ru.yandex.practicum.filmorate.dao.genres.GenreDbStorage;
+import ru.yandex.practicum.filmorate.dao.likes.LikesDbStorage;
+import ru.yandex.practicum.filmorate.dao.mpa.MpaRatingDbStorage;
+import ru.yandex.practicum.filmorate.dao.users.UserDbStorage;
+import ru.yandex.practicum.filmorate.dto.director.DirectorDto;
+import ru.yandex.practicum.filmorate.dto.film.FilmDto;
+import ru.yandex.practicum.filmorate.dto.film.NewFilmRequest;
+import ru.yandex.practicum.filmorate.dto.film.UpdateFilmRequest;
+import ru.yandex.practicum.filmorate.dto.genre.GenreDto;
 import ru.yandex.practicum.filmorate.exception.NotFoundException;
 import ru.yandex.practicum.filmorate.exception.ValidationException;
 import ru.yandex.practicum.filmorate.mapper.FilmMapper;
@@ -14,9 +24,12 @@ import java.util.*;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
+import static java.lang.String.format;
+
 @Service
 @RequiredArgsConstructor
 public class FilmService {
+    private final UserDbStorage userDbStorage;
     private final FilmDbStorage filmDbStorage;
     private final LikesDbStorage likesDbStorage;
     private final MpaRatingDbStorage mpaRatingDbStorage;
@@ -65,7 +78,7 @@ public class FilmService {
                     "Режиссёры не найдены: "
             );
 
-            film.setDirector(directors);
+            film.setDirectors(directors);
         }
 
         film = filmDbStorage.create(film);
@@ -73,7 +86,7 @@ public class FilmService {
     }
 
     public FilmDto update(UpdateFilmRequest request) {
-        // пробуем найти пользователя, если нет — выбросится NotFoundException
+        // пробуем найти фильм, если нет — выбросится NotFoundException
         Film updatedFilm = filmDbStorage.findById(request.getId())
                 .map(film -> FilmMapper.updateFilmFields(film, request))
                 .orElseThrow(() -> new NotFoundException("Фильм не найден"));
@@ -99,6 +112,9 @@ public class FilmService {
     }
 
     public FilmDto findById(Long id) {
+        if (id == null) {
+            throw new ValidationException("id фильма не должен быть null");
+        }
         return filmDbStorage.findById(id)
                 .map(this::getFilmExtensions)
                 .map(FilmMapper::mapToFilmDto)
@@ -106,6 +122,17 @@ public class FilmService {
     }
 
     public void setLike(Long filmId, Long userId) {
+        if (filmId == null || userId == null) {
+            throw new ValidationException("id фильма или пользователя не должен быть null");
+        }
+        userDbStorage.findById(userId)
+                .orElseThrow(() -> {
+                    throw new NotFoundException(format("Пользователь с id %d не найден.\n", userId));
+                });
+        filmDbStorage.findById(filmId)
+                .orElseThrow(() -> {
+                    throw new NotFoundException(format("Фильм с id %d не найден для обновления\n", filmId));
+                });
         if (!likesDbStorage.isLiked(filmId, userId)) {
             likesDbStorage.addLike(filmId, userId);
         }
@@ -121,6 +148,17 @@ public class FilmService {
     }
 
     public void removeLike(Long filmId, Long userId) {
+        if (filmId == null || userId == null) {
+            throw new ValidationException("id фильма или пользователя не должен быть null");
+        }
+        userDbStorage.findById(userId)
+                .orElseThrow(() -> {
+                    throw new NotFoundException(format("Пользователь с id %d не найден.\n", userId));
+                });
+        filmDbStorage.findById(filmId)
+                .orElseThrow(() -> {
+                    throw new NotFoundException(format("Фильм с id %d не найден для обновления\n", filmId));
+                });
         likesDbStorage.removeLike(filmId, userId);
 
         Event event = new Event();
@@ -148,13 +186,20 @@ public class FilmService {
     }
 
     public List<FilmDto> findRecommendationFilms(Long userId) {
+        if (userId == null) {
+            throw new ValidationException("id пользователя не может быть null");
+        }
+        userDbStorage.findById(userId)
+                .orElseThrow(() -> new NotFoundException("Пользователь не найден"));
         return filmDbStorage.findRecommendations(userId).stream()
                 .map(FilmMapper::mapToFilmDto)
                 .collect(Collectors.toList());
     }
 
     public List<FilmDto> getFilmsByDirector(Long directorId, String sortBy) {
-
+        if (directorId == null) {
+            throw new ValidationException("id режиссёра не должен быть null");
+        }
         // проверка, что режиссёр существует
         Director director = directorDbStorage.findById(directorId)
                 .orElseThrow(() -> new NotFoundException("Режиссёр не найден"));
@@ -168,6 +213,14 @@ public class FilmService {
     }
 
     public Collection<FilmDto> getCommonFilms(Long userId, Long friendId) {
+        if (userId == null || friendId == null) {
+            throw new ValidationException("id полльзователя или друга не может быть null");
+        }
+        userDbStorage.findById(userId)
+                .orElseThrow(() -> new NotFoundException("Пользователь не найден"));
+        userDbStorage.findById(friendId)
+                .orElseThrow(() -> new NotFoundException("Друг не найден"));
+
         Collection<FilmDto> films = findAll();
 
         // поллучаем множество фильмов которые лайкнул друг
@@ -220,9 +273,9 @@ public class FilmService {
             film.setGenres(genreDbStorage.findByFilmId(film.getId()));
         }
         // Directors
-        if (film.getDirector() != null) {
+        if (film.getDirectors() != null) {
             if (film.getId() != null) {
-                film.setDirector(
+                film.setDirectors(
                         directorDbStorage.findByFilmId(film.getId())
                 );
             }
