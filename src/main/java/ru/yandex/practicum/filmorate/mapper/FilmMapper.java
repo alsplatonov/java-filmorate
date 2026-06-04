@@ -11,8 +11,8 @@ import ru.yandex.practicum.filmorate.model.Genre;
 
 import java.util.Comparator;
 import java.util.HashSet;
-import java.util.stream.Collectors;
 import java.util.LinkedHashSet;
+import java.util.stream.Collectors;
 
 @NoArgsConstructor(access = AccessLevel.PRIVATE)
 public final class FilmMapper {

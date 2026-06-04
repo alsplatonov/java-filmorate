@@ -7,6 +7,7 @@ import ru.yandex.practicum.filmorate.dto.mpa.MpaRatingDto;
 import ru.yandex.practicum.filmorate.exception.NotFoundException;
 import ru.yandex.practicum.filmorate.exception.ValidationException;
 import ru.yandex.practicum.filmorate.mapper.MpaRatingMapper;
+
 import java.util.Collection;
 import java.util.stream.Collectors;
 

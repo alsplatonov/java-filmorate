@@ -58,7 +58,7 @@ public class LikesDbStorage implements LikesStorage {
 
     @Override
     public boolean hasLikes(Long userId) {
-        Boolean has =  jdbc.queryForObject(HAS_LIKES, Boolean.class, userId);
+        Boolean has = jdbc.queryForObject(HAS_LIKES, Boolean.class, userId);
         return has != null && has;
     }
 

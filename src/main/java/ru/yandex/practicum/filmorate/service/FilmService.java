@@ -2,8 +2,8 @@ package ru.yandex.practicum.filmorate.service;
 
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
-import ru.yandex.practicum.filmorate.dao.event.EventStorage;
 import ru.yandex.practicum.filmorate.dao.directors.DirectorDbStorage;
+import ru.yandex.practicum.filmorate.dao.event.EventStorage;
 import ru.yandex.practicum.filmorate.dao.films.FilmDbStorage;
 import ru.yandex.practicum.filmorate.dao.genres.GenreDbStorage;
 import ru.yandex.practicum.filmorate.dao.likes.LikesDbStorage;

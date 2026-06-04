@@ -1,6 +1,7 @@
 package ru.yandex.practicum.filmorate.dao.friends;
 
 import ru.yandex.practicum.filmorate.model.User;
+
 import java.util.List;
 
 public interface FriendsStorage {

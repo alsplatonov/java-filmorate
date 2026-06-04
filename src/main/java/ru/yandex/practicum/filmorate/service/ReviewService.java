@@ -17,7 +17,6 @@ import ru.yandex.practicum.filmorate.model.EventType;
 import ru.yandex.practicum.filmorate.model.Operation;
 import ru.yandex.practicum.filmorate.model.Review;
 
-import java.util.Collections;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -98,9 +97,6 @@ public class ReviewService {
     public List<ReviewDto> findReviewsByFilmId(Long filmId, int count) {
         if (count <= 0) {
             throw new ValidationException("Число отзывов должно быть положительным");
-        }
-        if (filmId == null) {
-            return Collections.emptyList();
         }
         return reviewDbStorage.findReviewsByFilmId(filmId, count).stream()
                 .map(ReviewMapper::mapToReviewDto)

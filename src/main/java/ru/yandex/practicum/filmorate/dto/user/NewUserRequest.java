@@ -2,6 +2,7 @@ package ru.yandex.practicum.filmorate.dto.user;
 
 import jakarta.validation.constraints.*;
 import lombok.Data;
+
 import java.time.LocalDate;
 import java.util.HashSet;
 import java.util.Set;
@@ -26,6 +27,6 @@ public class NewUserRequest {
     private Set<Long> friends = new HashSet<>();
 
     public boolean hasName() {
-        return ! (name == null || name.isBlank());
+        return !(name == null || name.isBlank());
     }
 }

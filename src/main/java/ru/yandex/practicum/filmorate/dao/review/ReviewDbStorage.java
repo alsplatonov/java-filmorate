@@ -68,7 +68,7 @@ public class ReviewDbStorage extends BaseRepository<Review> implements ReviewSto
     @Override
     public Collection<Review> findReviewsByFilmId(Long filmId, int count) {
         if (filmId == null) {
-            return findMany(FIND_REVIEWS_WITHOUT_FILM_ID);
+            return findMany(FIND_REVIEWS_WITHOUT_FILM_ID, count);
         }
         return findMany(
                 FIND_REVIEWS_BY_FILM_ID,
