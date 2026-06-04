@@ -192,6 +192,7 @@ public class FilmService {
         userDbStorage.findById(userId)
                 .orElseThrow(() -> new NotFoundException("Пользователь не найден"));
         return filmDbStorage.findRecommendations(userId).stream()
+                .map(this::getFilmExtensions)
                 .map(FilmMapper::mapToFilmDto)
                 .collect(Collectors.toList());
     }
