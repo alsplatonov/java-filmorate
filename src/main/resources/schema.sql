@@ -134,3 +134,41 @@ CREATE TABLE IF NOT EXISTS events (
     CONSTRAINT fk_event_user FOREIGN KEY (user_id)
     REFERENCES users(id) ON DELETE CASCADE
     );
+
+-- создаем индексы для foreign key, но пропускаем для тех полей которые являются primary key
+-- для primary key индексы создаются автоматически
+
+-- индексы для таблицы films
+CREATE INDEX IF NOT EXISTS idx_films_mpa_id ON films(mpa_id);
+CREATE INDEX IF NOT EXISTS idx_films_name ON films(name);
+CREATE INDEX IF NOT EXISTS idx_films_release_date ON films(release_date);
+
+-- индекс для таблицы film_genres (внешний ключ genre_id, film_id уже в PRIMARY KEY)
+CREATE INDEX IF NOT EXISTS idx_film_genres_genre_id ON film_genres(genre_id);
+
+-- индекс для таблицы film_directors (внешний ключ director_id, film_id уже в PRIMARY KEY)
+CREATE INDEX IF NOT EXISTS idx_film_directors_director_id ON film_directors(director_id);
+
+-- индексы для таблицы likes
+CREATE INDEX IF NOT EXISTS idx_likes_film_id ON likes(film_id);
+CREATE INDEX IF NOT EXISTS idx_likes_user_id ON likes(user_id);
+
+-- индекс для таблицы friendships (внешний ключ friend_id, user_id уже в PRIMARY KEY)
+CREATE INDEX IF NOT EXISTS idx_friendships_friend_id ON friendships(friend_id);
+
+-- индексы для таблицы reviews
+CREATE INDEX IF NOT EXISTS idx_reviews_film_id ON reviews(film_id);
+CREATE INDEX IF NOT EXISTS idx_reviews_user_id ON reviews(user_id);
+CREATE INDEX IF NOT EXISTS idx_reviews_useful ON reviews(useful);
+
+-- индексы для таблицы review_likes
+CREATE INDEX IF NOT EXISTS idx_review_likes_user_id ON review_likes(user_id);
+CREATE INDEX IF NOT EXISTS idx_review_likes_is_like ON review_likes(is_like);
+
+-- индексы для таблицы events
+CREATE INDEX IF NOT EXISTS idx_events_user_id ON events(user_id);
+CREATE INDEX IF NOT EXISTS idx_events_created_at ON events(created_at);
+
+-- индексы для таблицы users
+CREATE INDEX IF NOT EXISTS idx_users_email ON users(email);
+CREATE INDEX IF NOT EXISTS idx_users_login ON users(login);
