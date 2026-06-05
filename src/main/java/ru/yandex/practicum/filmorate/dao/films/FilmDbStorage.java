@@ -59,6 +59,13 @@ public class FilmDbStorage extends BaseRepository<Film> implements FilmStorage {
                     "JOIN film_directors fd ON f.id = fd.film_id " +
                     "WHERE fd.director_id = ? " +
                     "ORDER BY f.release_date";
+    private static final String GET_COMMON_LIKES_FILMS =
+            "SELECT f.* " +
+                    "FROM likes l1 " +
+                    "JOIN likes l2 ON l1.film_id = l2.film_id " +
+                    "JOIN films f ON f.id = l1.film_id " +
+                    "WHERE l1.user_id = ? AND l2.user_id = ? AND l1.user_id != l2.user_id";
+
     @Autowired
     LikesStorage likesStorage;
     @Autowired
@@ -159,6 +166,10 @@ public class FilmDbStorage extends BaseRepository<Film> implements FilmStorage {
         }
 
         return findMany(sql, params.toArray());
+    }
+
+    public Collection<Film> getCommonLikesFilms(Long userId, Long friendId) {
+        return findMany(GET_COMMON_LIKES_FILMS, userId, friendId);
     }
 
     private void saveFilmGenres(long filmId, Set<Genre> genres) {

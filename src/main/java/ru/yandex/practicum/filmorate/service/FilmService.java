@@ -215,31 +215,20 @@ public class FilmService {
 
     public Collection<FilmDto> getCommonFilms(Long userId, Long friendId) {
         if (userId == null || friendId == null) {
-            throw new ValidationException("id полльзователя или друга не может быть null");
+            throw new ValidationException("id пользователя или друга не может быть null");
+        }
+        if (userId.equals(friendId)) {
+            return Collections.emptyList();
         }
         userDbStorage.findById(userId)
                 .orElseThrow(() -> new NotFoundException("Пользователь не найден"));
         userDbStorage.findById(friendId)
                 .orElseThrow(() -> new NotFoundException("Друг не найден"));
 
-        Collection<FilmDto> films = findAll();
-
-        // поллучаем множество фильмов которые лайкнул друг
-        Set<Long> friendLikedFilmsIds = films.stream()
-                .map(FilmDto::getId)
-                .filter(id -> likesDbStorage.isLiked(id, friendId))
-                .collect(Collectors.toSet());
-
-        // находим пересечения с множеством фильмов которые лайкнул юзер
-        Set<FilmDto> commonLikedFilms = films.stream()
-                .filter(film -> likesDbStorage.isLiked(film.getId(), userId))
-                .filter(film -> friendLikedFilmsIds.contains(film.getId()))
-                .collect(Collectors.toSet());
-
-        // возвращаем популярные фильмы, но мы отсеяли те, которые не входят в список общих лайкнутых фильмов
-        return getPopularFilms().stream()
-                .filter(commonLikedFilms::contains)
-                .collect(Collectors.toSet());
+        return filmDbStorage.getCommonLikesFilms(userId, friendId).stream()
+                .map(this::getFilmExtensions)
+                .map(FilmMapper::mapToFilmDto)
+                .collect(Collectors.toList());
     }
 
     public FilmDto delete(Long filmId) {
