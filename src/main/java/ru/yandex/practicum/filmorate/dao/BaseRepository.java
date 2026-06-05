@@ -30,6 +30,11 @@ public class BaseRepository<T> {
         return jdbc.query(query, mapper, params);
     }
 
+    // работа с расширенным маппером
+    protected <R> List<R> findManyWithMapper(String query, RowMapper<R> customMapper, Object... params) {
+        return jdbc.query(query, customMapper, params);
+    }
+
     protected boolean delete(String sql, Object... params) {
         return jdbc.update(sql, params) > 0;
     }

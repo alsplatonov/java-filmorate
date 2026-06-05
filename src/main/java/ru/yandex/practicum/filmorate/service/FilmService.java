@@ -82,7 +82,7 @@ public class FilmService {
         }
 
         film = filmDbStorage.create(film);
-        return FilmMapper.mapToFilmDto(film);
+        return getFilmWithExtensions(film.getId());
     }
 
     public FilmDto update(UpdateFilmRequest request) {
@@ -92,33 +92,24 @@ public class FilmService {
                 .orElseThrow(() -> new NotFoundException("Фильм не найден"));
         validateReleaseDate(updatedFilm);
         updatedFilm = filmDbStorage.update(updatedFilm);
-        return FilmMapper.mapToFilmDto(updatedFilm);
+        return getFilmWithExtensions(updatedFilm.getId());
     }
 
     public Collection<FilmDto> findAll() {
-        return filmDbStorage.findAll().stream()
-                .map(this::getFilmExtensions)
-                .map(FilmMapper::mapToFilmDto)
-                .collect(Collectors.toList());
+        return getFilmsWithExtensions(filmDbStorage.findAll());
     }
 
     public Collection<FilmDto> searchBy(String query, String by) {
         System.out.println("searchBy: " + query);
         List<Film> films = filmDbStorage.searchBy(query, by);
-        return films.stream()
-                .map(this::getFilmExtensions)
-                .map(FilmMapper::mapToFilmDto)
-                .collect(Collectors.toList());
+        return getFilmsWithExtensionsWithOrder(films);
     }
 
     public FilmDto findById(Long id) {
         if (id == null) {
             throw new ValidationException("id фильма не должен быть null");
         }
-        return filmDbStorage.findById(id)
-                .map(this::getFilmExtensions)
-                .map(FilmMapper::mapToFilmDto)
-                .orElseThrow(() -> new NotFoundException("Фильм не найден с ID: " + id));
+        return getFilmWithExtensions(id);
     }
 
     public void setLike(Long filmId, Long userId) {
@@ -179,10 +170,7 @@ public class FilmService {
         // В базе реализованна сортировка и count
         List<Film> popularFilms = filmDbStorage.getPopular(count, genreId, year);
 
-        return popularFilms.stream()
-                .map(this::getFilmExtensions)
-                .map(FilmMapper::mapToFilmDto)
-                .collect(Collectors.toList());
+        return getFilmsWithExtensionsWithOrder(popularFilms);
     }
 
     public List<FilmDto> findRecommendationFilms(Long userId) {
@@ -191,10 +179,8 @@ public class FilmService {
         }
         userDbStorage.findById(userId)
                 .orElseThrow(() -> new NotFoundException("Пользователь не найден"));
-        return filmDbStorage.findRecommendations(userId).stream()
-                .map(this::getFilmExtensions)
-                .map(FilmMapper::mapToFilmDto)
-                .collect(Collectors.toList());
+        return getFilmsWithExtensions(filmDbStorage.findRecommendations(userId))
+                .stream().toList();
     }
 
     public List<FilmDto> getFilmsByDirector(Long directorId, String sortBy) {
@@ -207,10 +193,7 @@ public class FilmService {
 
         List<Film> films = filmDbStorage.getFilmsByDirector(director.getId(), sortBy);
 
-        return films.stream()
-                .map(this::getFilmExtensions)
-                .map(FilmMapper::mapToFilmDto)
-                .toList();
+        return getFilmsWithExtensionsWithOrder(films).stream().toList();
     }
 
     public Collection<FilmDto> getCommonFilms(Long userId, Long friendId) {
@@ -225,10 +208,7 @@ public class FilmService {
         userDbStorage.findById(friendId)
                 .orElseThrow(() -> new NotFoundException("Друг не найден"));
 
-        return filmDbStorage.getCommonLikesFilms(userId, friendId).stream()
-                .map(this::getFilmExtensions)
-                .map(FilmMapper::mapToFilmDto)
-                .collect(Collectors.toList());
+        return getFilmsWithExtensions(filmDbStorage.getCommonLikesFilms(userId, friendId));
     }
 
     public FilmDto delete(Long filmId) {
@@ -250,27 +230,71 @@ public class FilmService {
         }
     }
 
-    private Film getFilmExtensions(Film film) {
-        // MPA
-        if (film.getMpa() != null) {
-            film.setMpa(
-                    mpaRatingDbStorage.findById(film.getMpa().getId())
-                            .orElseThrow(() -> new NotFoundException("MPA не найден"))
-            );
+    // метод для сбора фильмов с расширениями: жанры, mpa, режиссеры
+    private Collection<FilmDto> getFilmsWithExtensions(Collection<Film> films) {
+        if (films == null || films.isEmpty()) {
+            return Collections.emptyList();
         }
-        // Genres
-        if (film.getId() != null) {
-            film.setGenres(genreDbStorage.findByFilmId(film.getId()));
+        Collection<Film> rawFilms = filmDbStorage.getFilmsWithExtensions(films);
+        Collection<Film> mergedFilms = mergeFilmDuplicates(rawFilms);
+        return mergedFilms.stream()
+                .map(FilmMapper::mapToFilmDto)
+                .collect(Collectors.toList());
+    }
+
+    // то же самое что и предыдущий но для одного фильма
+    private FilmDto getFilmWithExtensions(Long filmId) {
+        Collection<Film> rawFilms = filmDbStorage.getFilmWithExtensions(filmId);
+        if (rawFilms.isEmpty()) {
+            throw new NotFoundException("Фильм не найден с ID: " + filmId);
         }
-        // Directors
-        if (film.getDirectors() != null) {
-            if (film.getId() != null) {
-                film.setDirectors(
-                        directorDbStorage.findByFilmId(film.getId())
-                );
+        Collection<Film> mergedFilms = mergeFilmDuplicates(rawFilms);
+        Film film = mergedFilms.iterator().next();
+        return FilmMapper.mapToFilmDto(film);
+    }
+
+    // некоторые из методов сервиса требуют сохранения порядка при получении данных,
+    // данный метод это getFilmsWithExtensions с учетом порядка
+    private Collection<FilmDto> getFilmsWithExtensionsWithOrder(List<Film> films) {
+        Collection<Film> rawFilms = filmDbStorage.getFilmsWithExtensions(films);
+        Collection<Film> mergedFilms = mergeFilmDuplicates(rawFilms);
+
+        Map<Long, Film> filmMap = mergedFilms.stream()
+                .collect(Collectors.toMap(Film::getId, Function.identity()));
+
+        return films.stream()
+                .map(Film::getId)
+                .filter(filmMap::containsKey)
+                .map(filmMap::get)
+                .map(FilmMapper::mapToFilmDto)
+                .collect(Collectors.toList());
+    }
+
+    // когда получаем расширенную версию фильмов, происходит ситуация:
+    // один фильм может иметь несколько жанров и несколько режиссеров, а в сущности эти поля типа Set
+    // поэтому поля с одинаковыми полями сущности Film мы лбьединяем в одно
+    private Collection<Film> mergeFilmDuplicates(Collection<Film> filmsWithDuplicates) {
+        Map<Long, Film> filmMap = new LinkedHashMap<>();
+        for (Film film : filmsWithDuplicates) {
+            Long id = film.getId();
+            if (!filmMap.containsKey(id)) {
+                Film newFilm = new Film();
+                newFilm.setId(id);
+                newFilm.setName(film.getName());
+                newFilm.setDescription(film.getDescription());
+                newFilm.setReleaseDate(film.getReleaseDate());
+                newFilm.setDuration(film.getDuration());
+                newFilm.setMpa(film.getMpa());
+                filmMap.put(id, newFilm);
+            }
+            if (film.getGenres() != null && !film.getGenres().isEmpty()) {
+                filmMap.get(id).getGenres().addAll(film.getGenres());
+            }
+            if (film.getDirectors() != null && !film.getDirectors().isEmpty()) {
+                filmMap.get(id).getDirectors().addAll(film.getDirectors());
             }
         }
-        return film;
+        return filmMap.values();
     }
 
     private <T, K> Set<T> resolveEntities(
@@ -293,24 +317,5 @@ public class FilmService {
         }
 
         return entities;
-    }
-
-    private Collection<FilmDto> getPopularFilms() {
-        List<Film> films = filmDbStorage.findAll();
-
-        Map<Long, Integer> likesMap = likesDbStorage.getLikesCountForFilms(
-                films.stream()
-                        .map(Film::getId)
-                        .collect(Collectors.toList())
-        );
-
-        return films.stream()
-                .map(this::getFilmExtensions)
-                .sorted((f1, f2) -> Integer.compare(
-                        likesMap.getOrDefault(f2.getId(), 0),
-                        likesMap.getOrDefault(f1.getId(), 0)
-                ))
-                .map(FilmMapper::mapToFilmDto)
-                .collect(Collectors.toList());
     }
 }

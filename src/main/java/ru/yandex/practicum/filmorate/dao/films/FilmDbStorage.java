@@ -2,6 +2,7 @@ package ru.yandex.practicum.filmorate.dao.films;
 
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.core.RowMapper;
 import org.springframework.stereotype.Repository;
@@ -13,6 +14,7 @@ import ru.yandex.practicum.filmorate.model.Film;
 import ru.yandex.practicum.filmorate.model.Genre;
 
 import java.util.*;
+import java.util.stream.Collectors;
 
 @Slf4j
 @Repository("dbFilmStorage")
@@ -60,19 +62,44 @@ public class FilmDbStorage extends BaseRepository<Film> implements FilmStorage {
                     "WHERE fd.director_id = ? " +
                     "ORDER BY f.release_date";
     private static final String GET_COMMON_LIKES_FILMS =
-            "SELECT f.* " +
+            "SELECT DISTINCT f.* " +
                     "FROM likes l1 " +
                     "JOIN likes l2 ON l1.film_id = l2.film_id " +
                     "JOIN films f ON f.id = l1.film_id " +
                     "WHERE l1.user_id = ? AND l2.user_id = ? AND l1.user_id != l2.user_id";
+    private static final String GET_FILMS_WITH_EXTENSIONS =
+            "SELECT f.*, mr.id AS mpa_id, mr.name AS mpa_name, g.id AS genre_id, g.name AS genre_name, d.id AS director_id, d.name AS director_name " +
+                    "FROM films f " +
+                    "LEFT JOIN mpa_ratings mr ON f.mpa_id = mr.id " +
+                    "LEFT JOIN film_genres fg ON f.id = fg.film_id " +
+                    "LEFT JOIN genres g ON fg.genre_id = g.id " +
+                    "LEFT JOIN film_directors fd ON f.id = fd.film_id " +
+                    "LEFT JOIN directors d ON fd.director_id = d.id " +
+                    "WHERE f.id IN (%s) " +
+                    "ORDER BY f.id, g.id, d.id";
+    private static final String GET_FILM_WITH_EXTENSIONS =
+            "SELECT f.*, mr.id AS mpa_id, mr.name AS mpa_name, g.id AS genre_id, g.name AS genre_name, d.id AS director_id, d.name AS director_name " +
+                    "FROM films f " +
+                    "LEFT JOIN mpa_ratings mr ON f.mpa_id = mr.id " +
+                    "LEFT JOIN film_genres fg ON f.id = fg.film_id " +
+                    "LEFT JOIN genres g ON fg.genre_id = g.id " +
+                    "LEFT JOIN film_directors fd ON f.id = fd.film_id " +
+                    "LEFT JOIN directors d ON fd.director_id = d.id " +
+                    "WHERE f.id = ? " +
+                    "ORDER BY f.id, g.id, d.id";
 
     @Autowired
     LikesStorage likesStorage;
     @Autowired
     UserStorage userStorage;
 
-    public FilmDbStorage(JdbcTemplate jdbc, RowMapper<Film> mapper) {
+    private final RowMapper<Film> extendedMapper;
+
+    public FilmDbStorage(JdbcTemplate jdbc,
+                         @Qualifier("filmRowMapper") RowMapper<Film> mapper,
+                         @Qualifier("filmExtendedRowMapper") RowMapper<Film> extendedMapper) {
         super(jdbc, mapper);
+        this.extendedMapper = extendedMapper;
     }
 
     @Override
@@ -172,21 +199,19 @@ public class FilmDbStorage extends BaseRepository<Film> implements FilmStorage {
         return findMany(GET_COMMON_LIKES_FILMS, userId, friendId);
     }
 
-    private void saveFilmGenres(long filmId, Set<Genre> genres) {
-        jdbc.update("DELETE FROM film_genres WHERE film_id = ?", filmId);
-        if (genres == null || genres.isEmpty()) {
-            return;
-        }
+    public Collection<Film> getFilmsWithExtensions(Collection<Film> films) {
+        // к сожалению как я узнал у jdbc нет API для подставновки коллекций в
+        // SQL (jdbc необходимо точно знать количество подставляемых параметров в запрос)
+        // запросы поэтому, фрагмент %s при помощи String.format заменяется на нашу коллекцию id
+        String replaceString = films.stream()
+                .map(Film::getId)
+                .map(String::valueOf)
+                .collect(Collectors.joining(","));
+        return findManyWithMapper(String.format(GET_FILMS_WITH_EXTENSIONS, replaceString), extendedMapper);
+    }
 
-        jdbc.batchUpdate(
-                INSERT_FILM_GENRE,
-                genres,
-                genres.size(),
-                (ps, genre) -> {
-                    ps.setLong(1, filmId);
-                    ps.setLong(2, genre.getId());
-                }
-        );
+    public Collection<Film> getFilmWithExtensions(Long filmId) {
+        return findManyWithMapper(GET_FILM_WITH_EXTENSIONS, extendedMapper, filmId);
     }
 
     public List<Film> getPopular(int limit, Long genreId, Long year) {
@@ -224,6 +249,23 @@ public class FilmDbStorage extends BaseRepository<Film> implements FilmStorage {
         parameters.add(limit);
 
         return findMany(sql.toString(), parameters.toArray());
+    }
+
+    private void saveFilmGenres(long filmId, Set<Genre> genres) {
+        jdbc.update("DELETE FROM film_genres WHERE film_id = ?", filmId);
+        if (genres == null || genres.isEmpty()) {
+            return;
+        }
+
+        jdbc.batchUpdate(
+                INSERT_FILM_GENRE,
+                genres,
+                genres.size(),
+                (ps, genre) -> {
+                    ps.setLong(1, filmId);
+                    ps.setLong(2, genre.getId());
+                }
+        );
     }
 
     private void saveFilmDirectors(long filmId, Set<Director> directors) {

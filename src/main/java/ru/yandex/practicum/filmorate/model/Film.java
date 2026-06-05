@@ -37,4 +37,12 @@ public class Film {
     private Set<Long> likes = new HashSet<>();
 
     private Set<Director> directors = new HashSet<>();
+
+    public void addGenres(Genre genre) {
+        genres.add(genre);
+    }
+
+    public void addDirector(Director director) {
+        directors.add(director);
+    }
 }
