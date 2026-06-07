@@ -5,11 +5,13 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
-import ru.yandex.practicum.filmorate.dto.FilmDto;
-import ru.yandex.practicum.filmorate.dto.NewFilmRequest;
-import ru.yandex.practicum.filmorate.dto.UpdateFilmRequest;
+import ru.yandex.practicum.filmorate.dto.film.FilmDto;
+import ru.yandex.practicum.filmorate.dto.film.NewFilmRequest;
+import ru.yandex.practicum.filmorate.dto.film.UpdateFilmRequest;
 import ru.yandex.practicum.filmorate.service.FilmService;
+
 import java.util.Collection;
+import java.util.List;
 
 @Slf4j
 @RestController
@@ -34,29 +36,66 @@ public class FilmController {
     }
 
     @GetMapping
+    @ResponseStatus(HttpStatus.OK)
     public Collection<FilmDto> findAll() {
+        log.info("Получение списка фильмов");
         return filmService.findAll();
     }
 
     @GetMapping("/{id}")
     public FilmDto findById(@PathVariable Long id) {
+        log.info("Получение фильма по id {}", id);
         return filmService.findById(id);
     }
 
     @PutMapping("/{id}/like/{userId}")
     @ResponseStatus(HttpStatus.NO_CONTENT)
     public void setLike(@PathVariable Long id, @PathVariable Long userId) {
+        log.info("Пользователь с id {} поставил лайк фильму {}", userId, id);
         filmService.setLike(id, userId);
     }
 
     @DeleteMapping("/{id}/like/{userId}")
-    @ResponseStatus(HttpStatus.NO_CONTENT)
     public void removeLike(@PathVariable Long id, @PathVariable Long userId) {
+        log.info("Удален лайк пользователя с id {} с фильма {}", userId, id);
         filmService.removeLike(id, userId);
     }
 
     @GetMapping("/popular")
-    public Collection<FilmDto> findPopularFilms(@RequestParam(defaultValue = "10") int count) {
-        return filmService.getPopularFilms(count);
+    public Collection<FilmDto> getPopularFilms(@RequestParam(defaultValue = "10") int count,
+                                               @RequestParam(required = false) Long genreId,
+                                               @RequestParam(required = false) Long year) {
+        log.info("Вывод топ-{} фильмов", count);
+        return filmService.getPopular(count, genreId, year);
+    }
+
+    @GetMapping("/common")
+    public Collection<FilmDto> getCommonFilms(@RequestParam Long userId, @RequestParam Long friendId) {
+        log.info("Пользователь {} запросил общие фильмы с {}", userId, friendId);
+        return filmService.getCommonFilms(userId, friendId);
+    }
+
+    @DeleteMapping("/{filmId}")
+    @ResponseStatus(HttpStatus.NO_CONTENT)
+    public FilmDto delete(@PathVariable Long filmId) {
+        log.info("Удаление фильма с id {}", filmId);
+        return filmService.delete(filmId);
+    }
+
+    @GetMapping("/director/{directorId}")
+    public List<FilmDto> getFilmsByDirector(
+            @PathVariable Long directorId,
+            @RequestParam(defaultValue = "year") String sortBy) {
+        log.info("Получение списка фильмов по режиссёру с id {}", directorId);
+        return filmService.getFilmsByDirector(directorId, sortBy);
+    }
+
+    @GetMapping("/search")
+    public Collection<FilmDto> searchByTitleOrDirector(
+            @RequestParam String query,
+            @RequestParam String by) {
+        Collection<FilmDto> result = filmService.searchBy(query, by);
+        log.info("Поиск фильмов. query='{}', by='{}'. Найдено: {}", query, by, result.size());
+        return result;
     }
 }

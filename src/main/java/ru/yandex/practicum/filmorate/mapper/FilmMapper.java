@@ -2,13 +2,17 @@ package ru.yandex.practicum.filmorate.mapper;
 
 import lombok.AccessLevel;
 import lombok.NoArgsConstructor;
-import ru.yandex.practicum.filmorate.dto.*;
+import ru.yandex.practicum.filmorate.dto.film.FilmDto;
+import ru.yandex.practicum.filmorate.dto.film.NewFilmRequest;
+import ru.yandex.practicum.filmorate.dto.film.UpdateFilmRequest;
+import ru.yandex.practicum.filmorate.model.Director;
 import ru.yandex.practicum.filmorate.model.Film;
 import ru.yandex.practicum.filmorate.model.Genre;
 
 import java.util.Comparator;
-import java.util.stream.Collectors;
+import java.util.HashSet;
 import java.util.LinkedHashSet;
+import java.util.stream.Collectors;
 
 @NoArgsConstructor(access = AccessLevel.PRIVATE)
 public final class FilmMapper {
@@ -20,6 +24,7 @@ public final class FilmMapper {
         film.setDuration(request.getDuration());
         film.setMpa(MpaRatingMapper.mapToRating(request.getMpa()));
         film.setGenres(null);
+        film.setDirectors(null);
         return film;
     }
 
@@ -36,6 +41,13 @@ public final class FilmMapper {
                         film.getGenres().stream()
                                 .sorted(Comparator.comparing(Genre::getId))
                                 .map(GenreMapper::mapToGenreDto)
+                                .collect(Collectors.toCollection(LinkedHashSet::new))
+        );
+        dto.setDirectors(
+                film.getDirectors() == null ? new HashSet<>() :
+                        film.getDirectors().stream()
+                                .sorted(Comparator.comparing(Director::getId))
+                                .map(DirectorMapper::mapToDirectorDto)
                                 .collect(Collectors.toCollection(LinkedHashSet::new))
         );
         return dto;
@@ -58,6 +70,24 @@ public final class FilmMapper {
             film.setDuration(request.getDuration());
         }
 
+        if (request.hasDirectors()) {
+            film.setDirectors(
+                    request.getDirector().stream()
+                            .map(DirectorMapper::mapToDirector)
+                            .collect(Collectors.toSet())
+            );
+        }
+
+        if (request.hasMpa()) {
+            film.setMpa(MpaRatingMapper.mapToRating(request.getMpa()));
+        }
+
+        if (request.hasGenres()) {
+            film.setGenres(request.getGenres().stream()
+                    .map(GenreMapper::mapToGenre)
+                    .collect(Collectors.toSet())
+            );
+        }
         //дополнить mpa Genres
         return film;
     }
